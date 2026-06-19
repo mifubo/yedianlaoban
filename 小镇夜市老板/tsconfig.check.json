@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "tools/cocos-cc-shim.d.ts",
+    "assets/scripts/**/*.ts"
+  ]
+}

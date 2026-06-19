@@ -1,0 +1,33 @@
+[
+  {
+    "id": "customer_001",
+    "name": "老街居民",
+    "unlockChapter": 1,
+    "basePatience": 28,
+    "tipMultiplier": 1,
+    "preferredDishes": [
+      "dish_001",
+      "dish_003"
+    ],
+    "maxOrderItems": 1,
+    "traits": [
+      "standard"
+    ]
+  },
+  {
+    "id": "customer_005",
+    "name": "急性子",
+    "unlockChapter": 1,
+    "basePatience": 18,
+    "tipMultiplier": 1.25,
+    "preferredDishes": [
+      "dish_001",
+      "dish_002"
+    ],
+    "maxOrderItems": 1,
+    "traits": [
+      "low_patience",
+      "pressure_intro"
+    ]
+  }
+]

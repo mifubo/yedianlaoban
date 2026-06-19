@@ -1,0 +1,64 @@
+import { LevelConfig, LevelId } from '../config/types';
+
+export type LevelOutcome = 'success' | 'fail';
+
+export interface LevelResult {
+  levelId: LevelId;
+  outcome: LevelOutcome;
+  earnedCoins: number;
+  baseRewardCoins: number;
+  finalRewardCoins: number;
+  servedCustomers: number;
+  maxCombo: number;
+  angryLeaveCount: number;
+  wrongServeCount: number;
+  stars: number;
+  canWatchDoubleRewardAd: boolean;
+  canWatchExtendTimeAd: boolean;
+}
+
+export interface BuildLevelResultOptions {
+  level: LevelConfig;
+  outcome: LevelOutcome;
+  earnedCoins: number;
+  servedCustomers: number;
+  maxCombo: number;
+  angryLeaveCount?: number;
+  wrongServeCount?: number;
+}
+
+export function calculateStars(level: LevelConfig, earnedCoins: number): number {
+  if (earnedCoins >= level.goals.coin3) {
+    return 3;
+  }
+
+  if (earnedCoins >= level.goals.coin2) {
+    return 2;
+  }
+
+  if (earnedCoins >= level.goals.coin1) {
+    return 1;
+  }
+
+  return 0;
+}
+
+export function buildLevelResult(options: BuildLevelResultOptions): LevelResult {
+  const stars = options.outcome === 'success' ? calculateStars(options.level, options.earnedCoins) : 0;
+  const baseRewardCoins = Math.max(0, options.earnedCoins);
+
+  return {
+    levelId: options.level.id,
+    outcome: options.outcome,
+    earnedCoins: options.earnedCoins,
+    baseRewardCoins,
+    finalRewardCoins: baseRewardCoins,
+    servedCustomers: options.servedCustomers,
+    maxCombo: options.maxCombo,
+    angryLeaveCount: options.angryLeaveCount ?? 0,
+    wrongServeCount: options.wrongServeCount ?? 0,
+    stars,
+    canWatchDoubleRewardAd: options.outcome === 'success' && baseRewardCoins > 0,
+    canWatchExtendTimeAd: options.outcome === 'fail',
+  };
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "station_griddle",
+    "name": "铁板",
+    "unlockLevel": 1,
+    "slotCountBase": 1,
+    "slotCountMax": 3,
+    "baseUpgradeCost": 120,
+    "speedBonusPerLevel": 0.05,
+    "maxSpeedBonus": 0.35
+  },
+  {
+    "id": "station_drink",
+    "name": "饮品台",
+    "unlockLevel": 3,
+    "slotCountBase": 1,
+    "slotCountMax": 2,
+    "baseUpgradeCost": 100,
+    "speedBonusPerLevel": 0.05,
+    "maxSpeedBonus": 0.3
+  }
+]

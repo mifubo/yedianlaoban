@@ -1,0 +1,19 @@
+{
+  "appName": "小镇夜市老板",
+  "engine": "Cocos Creator 3.x",
+  "language": "TypeScript",
+  "orientation": "portrait",
+  "designResolution": {
+    "width": 750,
+    "height": 1334,
+    "fitWidth": true,
+    "fitHeight": false
+  },
+  "mvpScope": {
+    "levels": 10,
+    "dishes": 3,
+    "equipments": 2,
+    "customers": 2,
+    "monetization": "IAA ads only"
+  }
+}

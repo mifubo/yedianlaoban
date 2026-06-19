@@ -1,0 +1,11 @@
+# Cocos Creator generated files
+/小镇夜市老板/library/
+/小镇夜市老板/temp/
+/小镇夜市老板/local/
+/小镇夜市老板/build/
+/小镇夜市老板/profiles/
+
+# Dependencies and logs
+/小镇夜市老板/node_modules/
+*.log
+.DS_Store

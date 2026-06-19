@@ -1,0 +1,15 @@
+{
+  "name": "town-night-market-boss",
+  "displayName": "小镇夜市老板",
+  "version": "0.1.0",
+  "description": "Cocos Creator 3.x TypeScript skeleton for a light IAA night-market time-management mini game.",
+  "creator": {
+    "version": "3.x"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.check.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

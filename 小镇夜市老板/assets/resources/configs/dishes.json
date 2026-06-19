@@ -1,0 +1,50 @@
+[
+  {
+    "id": "dish_001",
+    "name": "烤冷面",
+    "unlockLevel": 1,
+    "stationId": "station_griddle",
+    "basePrice": 12,
+    "baseCookTime": 4,
+    "complexity": 1,
+    "ingredients": [
+      "冷面",
+      "鸡蛋",
+      "酱料"
+    ],
+    "baseUpgradeCost": 80
+  },
+  {
+    "id": "dish_002",
+    "name": "柠檬水",
+    "unlockLevel": 3,
+    "stationId": "station_drink",
+    "basePrice": 8,
+    "baseCookTime": 3,
+    "complexity": 1,
+    "ingredients": [
+      "柠檬",
+      "糖浆",
+      "冰水"
+    ],
+    "baseUpgradeCost": 70
+  },
+  {
+    "id": "dish_003",
+    "name": "鸡蛋炒饭",
+    "unlockLevel": 6,
+    "stationId": "station_griddle",
+    "basePrice": 15,
+    "baseCookTime": 5,
+    "complexity": 2,
+    "ingredients": [
+      "米饭",
+      "鸡蛋",
+      "葱花"
+    ],
+    "baseUpgradeCost": 120,
+    "tags": [
+      "mvp_reuse_griddle"
+    ]
+  }
+]

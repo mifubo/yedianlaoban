@@ -1,0 +1,273 @@
+[
+  {
+    "id": 1,
+    "chapter": 1,
+    "localIndex": 1,
+    "levelType": "tutorial",
+    "durationSec": 65,
+    "dishPool": [
+      "dish_001"
+    ],
+    "customerMix": {
+      "customer_001": 1
+    },
+    "goals": {
+      "mainText": "服务3人",
+      "coin1": 40,
+      "coin2": 60,
+      "coin3": 80,
+      "served": 3
+    },
+    "modifiers": {
+      "customerCount": 3,
+      "patienceMultiplier": 1.5,
+      "rewardMultiplier": 1,
+      "rawRuleText": "只教学点击备菜/烹饪/上菜"
+    }
+  },
+  {
+    "id": 2,
+    "chapter": 1,
+    "localIndex": 2,
+    "levelType": "standard",
+    "durationSec": 70,
+    "dishPool": [
+      "dish_001"
+    ],
+    "customerMix": {
+      "customer_001": 1
+    },
+    "goals": {
+      "mainText": "赚够金币",
+      "coin1": 80,
+      "coin2": 100,
+      "coin3": 120
+    },
+    "modifiers": {
+      "customerCount": 5,
+      "patienceMultiplier": 1,
+      "rewardMultiplier": 1
+    }
+  },
+  {
+    "id": 3,
+    "chapter": 1,
+    "localIndex": 3,
+    "levelType": "tutorial_new_dish",
+    "durationSec": 75,
+    "dishPool": [
+      "dish_001",
+      "dish_002"
+    ],
+    "customerMix": {
+      "customer_001": 1
+    },
+    "goals": {
+      "mainText": "服务5人",
+      "coin1": 90,
+      "coin2": 120,
+      "coin3": 150,
+      "served": 5
+    },
+    "modifiers": {
+      "customerCount": 5,
+      "patienceMultiplier": 1,
+      "rewardMultiplier": 1,
+      "targetDishWeights": {
+        "dish_002": 0.6
+      },
+      "rawRuleText": "教学饮品台"
+    }
+  },
+  {
+    "id": 4,
+    "chapter": 1,
+    "localIndex": 4,
+    "levelType": "standard",
+    "durationSec": 75,
+    "dishPool": [
+      "dish_001",
+      "dish_002"
+    ],
+    "customerMix": {
+      "customer_001": 1
+    },
+    "goals": {
+      "mainText": "赚够金币",
+      "coin1": 120,
+      "coin2": 150,
+      "coin3": 180
+    },
+    "modifiers": {
+      "customerCount": 6,
+      "patienceMultiplier": 1,
+      "rewardMultiplier": 1
+    }
+  },
+  {
+    "id": 5,
+    "chapter": 1,
+    "localIndex": 5,
+    "levelType": "rush",
+    "durationSec": 80,
+    "dishPool": [
+      "dish_001",
+      "dish_002"
+    ],
+    "customerMix": {
+      "customer_001": 1
+    },
+    "goals": {
+      "mainText": "赚够金币",
+      "coin1": 150,
+      "coin2": 190,
+      "coin3": 230
+    },
+    "modifiers": {
+      "customerCount": 8,
+      "patienceMultiplier": 1.1,
+      "rewardMultiplier": 1,
+      "waveCount": 2,
+      "rawRuleText": "2个客流波次"
+    }
+  },
+  {
+    "id": 6,
+    "chapter": 1,
+    "localIndex": 6,
+    "levelType": "tutorial_new_dish",
+    "durationSec": 80,
+    "dishPool": [
+      "dish_001",
+      "dish_003"
+    ],
+    "customerMix": {
+      "customer_001": 1
+    },
+    "goals": {
+      "mainText": "做出4份鸡蛋炒饭",
+      "coin1": 150,
+      "coin2": 190,
+      "coin3": 230,
+      "targetDishId": "dish_003",
+      "targetDishCount": 4
+    },
+    "modifiers": {
+      "customerCount": 7,
+      "patienceMultiplier": 1,
+      "rewardMultiplier": 1,
+      "targetDishWeights": {
+        "dish_003": 0.65
+      },
+      "rawRuleText": "MVP阶段鸡蛋炒饭临时复用铁板工位"
+    }
+  },
+  {
+    "id": 7,
+    "chapter": 1,
+    "localIndex": 7,
+    "levelType": "standard",
+    "durationSec": 85,
+    "dishPool": [
+      "dish_001",
+      "dish_002",
+      "dish_003"
+    ],
+    "customerMix": {
+      "customer_001": 1
+    },
+    "goals": {
+      "mainText": "赚够金币",
+      "coin1": 200,
+      "coin2": 250,
+      "coin3": 300
+    },
+    "modifiers": {
+      "customerCount": 9,
+      "patienceMultiplier": 1,
+      "rewardMultiplier": 1
+    }
+  },
+  {
+    "id": 8,
+    "chapter": 1,
+    "localIndex": 8,
+    "levelType": "combo",
+    "durationSec": 85,
+    "dishPool": [
+      "dish_002",
+      "dish_003"
+    ],
+    "customerMix": {
+      "customer_001": 1
+    },
+    "goals": {
+      "mainText": "连续满意5人",
+      "coin1": 180,
+      "coin2": 230,
+      "coin3": 280,
+      "combo": 5
+    },
+    "modifiers": {
+      "customerCount": 8,
+      "patienceMultiplier": 1,
+      "rewardMultiplier": 1,
+      "rawRuleText": "上错菜/超时会断连"
+    }
+  },
+  {
+    "id": 9,
+    "chapter": 1,
+    "localIndex": 9,
+    "levelType": "standard",
+    "durationSec": 90,
+    "dishPool": [
+      "dish_001",
+      "dish_002",
+      "dish_003"
+    ],
+    "customerMix": {
+      "customer_001": 1
+    },
+    "goals": {
+      "mainText": "赚够金币",
+      "coin1": 260,
+      "coin2": 320,
+      "coin3": 390
+    },
+    "modifiers": {
+      "customerCount": 10,
+      "patienceMultiplier": 1,
+      "rewardMultiplier": 1
+    }
+  },
+  {
+    "id": 10,
+    "chapter": 1,
+    "localIndex": 10,
+    "levelType": "rush",
+    "durationSec": 90,
+    "dishPool": [
+      "dish_001",
+      "dish_002",
+      "dish_003"
+    ],
+    "customerMix": {
+      "customer_001": 0.9,
+      "customer_005": 0.1
+    },
+    "goals": {
+      "mainText": "赚够金币",
+      "coin1": 320,
+      "coin2": 400,
+      "coin3": 480
+    },
+    "modifiers": {
+      "customerCount": 12,
+      "patienceMultiplier": 1,
+      "rewardMultiplier": 1,
+      "waveCount": 2,
+      "rawRuleText": "2个客流波次;急性子只点单菜"
+    }
+  }
+]
