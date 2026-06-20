@@ -2,6 +2,35 @@ export type LevelId = number;
 export type DishId = string;
 export type CustomerId = string;
 export type EquipmentId = string;
+export type StoreUpgradeId = string;
+export type CosmeticItemId = string;
+export type CosmeticSetId = string;
+export type AvatarId = string;
+export type AvatarGender = 'male' | 'female';
+export type CosmeticSlot = 'hair' | 'hat' | 'apron' | 'shoes' | 'gloves' | 'clothes' | 'tool';
+
+export interface AnchorPoint {
+  x: number;
+  y: number;
+}
+
+export interface EconomyEffects {
+  priceBonus?: number;
+  speedBonus?: number;
+  costReduce?: number;
+  patienceBonus?: number;
+  complaintReduce?: number;
+  rating?: number;
+  tipBonus?: number;
+}
+
+export interface UpgradeMilestone {
+  level: number;
+  name: string;
+  effectText: string;
+  effects?: EconomyEffects;
+  unlocks?: string[];
+}
 
 export type LevelType =
   | 'tutorial'
@@ -58,6 +87,10 @@ export interface DishConfig {
   complexity: number;
   ingredients: string[];
   baseUpgradeCost: number;
+  ingredientCostRate?: number;
+  maxLevel?: number;
+  priceBonusPerLevel?: number;
+  upgradeMilestones?: UpgradeMilestone[];
   tags?: string[];
 }
 
@@ -81,7 +114,60 @@ export interface EquipmentConfig {
   baseUpgradeCost: number;
   speedBonusPerLevel: number;
   maxSpeedBonus: number;
+  maxLevel?: number;
+  slotUnlockLevels?: number[];
+  effectsPerLevel?: EconomyEffects;
+  upgradeMilestones?: UpgradeMilestone[];
   tags?: string[];
+}
+
+export interface StoreUpgradeConfig {
+  id: StoreUpgradeId;
+  name: string;
+  unlockLevel: number;
+  maxLevel: number;
+  baseUpgradeCost: number;
+  effectsPerLevel: EconomyEffects;
+  upgradeMilestones?: UpgradeMilestone[];
+  tags?: string[];
+}
+
+export interface PlayerAvatarConfig {
+  id: AvatarId;
+  name: string;
+  gender: AvatarGender;
+  portraitPath: string;
+  previewSpritePath: string;
+  actionAnchor: AnchorPoint;
+  tags?: string[];
+}
+
+export interface CosmeticItemConfig {
+  id: CosmeticItemId;
+  name: string;
+  slot: CosmeticSlot;
+  unlockLevel: number;
+  cost: number;
+  effects: EconomyEffects;
+  setId?: string;
+  iconPath?: string;
+  previewSpritePath?: string;
+  anchorOffset?: AnchorPoint;
+  tags?: string[];
+}
+
+export interface CosmeticSetConfig {
+  id: CosmeticSetId;
+  name: string;
+  requiredCosmeticIds: CosmeticItemId[];
+  effects: EconomyEffects;
+  tags?: string[];
+}
+
+export interface CosmeticConfigFile {
+  avatars: PlayerAvatarConfig[];
+  items: CosmeticItemConfig[];
+  sets: CosmeticSetConfig[];
 }
 
 export interface ConfigBundle {
@@ -89,6 +175,10 @@ export interface ConfigBundle {
   dishes: DishConfig[];
   customers: CustomerConfig[];
   equipments: EquipmentConfig[];
+  storeUpgrades: StoreUpgradeConfig[];
+  avatars: PlayerAvatarConfig[];
+  cosmetics: CosmeticItemConfig[];
+  cosmeticSets: CosmeticSetConfig[];
 }
 
 export interface RuntimeConfig extends ConfigBundle {
@@ -96,6 +186,10 @@ export interface RuntimeConfig extends ConfigBundle {
   dishById: Map<DishId, DishConfig>;
   customerById: Map<CustomerId, CustomerConfig>;
   equipmentById: Map<EquipmentId, EquipmentConfig>;
+  storeUpgradeById: Map<StoreUpgradeId, StoreUpgradeConfig>;
+  avatarById: Map<AvatarId, PlayerAvatarConfig>;
+  cosmeticById: Map<CosmeticItemId, CosmeticItemConfig>;
+  cosmeticSetById: Map<CosmeticSetId, CosmeticSetConfig>;
 }
 
 export interface JsonConfigPaths {
@@ -103,6 +197,8 @@ export interface JsonConfigPaths {
   dishes: string;
   customers: string;
   equipments: string;
+  storeUpgrades: string;
+  cosmetics: string;
 }
 
 export type ConfigSource =

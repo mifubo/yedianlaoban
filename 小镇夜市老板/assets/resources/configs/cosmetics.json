@@ -1,0 +1,277 @@
+{
+  "avatars": [
+    {
+      "id": "avatar_male_boss",
+      "name": "男老板",
+      "gender": "male",
+      "portraitPath": "placeholders/avatar/male_boss.svg",
+      "previewSpritePath": "placeholders/avatar/male_boss.svg",
+      "actionAnchor": {
+        "x": 0.5,
+        "y": 0.2
+      },
+      "tags": [
+        "boss",
+        "avatar"
+      ]
+    },
+    {
+      "id": "avatar_female_boss",
+      "name": "女老板",
+      "gender": "female",
+      "portraitPath": "placeholders/avatar/female_boss.svg",
+      "previewSpritePath": "placeholders/avatar/female_boss.svg",
+      "actionAnchor": {
+        "x": 0.5,
+        "y": 0.18
+      },
+      "tags": [
+        "boss",
+        "avatar"
+      ]
+    }
+  ],
+  "sets": [
+    {
+      "id": "night_market_veteran",
+      "name": "夜市老手套装",
+      "requiredCosmeticIds": [
+        "cosmetic_straw_hat",
+        "cosmetic_canvas_apron",
+        "cosmetic_light_shoes",
+        "cosmetic_bamboo_tongs"
+      ],
+      "effects": {
+        "complaintReduce": 0.015,
+        "rating": 1
+      },
+      "tags": [
+        "set",
+        "stable_service"
+      ]
+    },
+    {
+      "id": "fresh_service_set",
+      "name": "清爽招待套装",
+      "requiredCosmeticIds": [
+        "cosmetic_tidy_hair",
+        "cosmetic_mint_tee",
+        "cosmetic_lemon_apron",
+        "cosmetic_anti_slip_sneakers"
+      ],
+      "effects": {
+        "patienceBonus": 0.01,
+        "tipBonus": 0.02
+      },
+      "tags": [
+        "set",
+        "tip"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "cosmetic_tidy_hair",
+      "name": "利落短发",
+      "slot": "hair",
+      "unlockLevel": 1,
+      "cost": 120,
+      "effects": {
+        "tipBonus": 0.005
+      },
+      "setId": "fresh_service_set",
+      "iconPath": "placeholders/avatar/icon_hair_tidy.svg",
+      "previewSpritePath": "placeholders/avatar/icon_hair_tidy.svg",
+      "tags": [
+        "cosmetic",
+        "hair"
+      ]
+    },
+    {
+      "id": "cosmetic_ponytail_band",
+      "name": "清爽发带",
+      "slot": "hair",
+      "unlockLevel": 4,
+      "cost": 240,
+      "effects": {
+        "patienceBonus": 0.01
+      },
+      "iconPath": "placeholders/avatar/icon_hair_band.svg",
+      "previewSpritePath": "placeholders/avatar/icon_hair_band.svg",
+      "tags": [
+        "cosmetic",
+        "hair"
+      ]
+    },
+    {
+      "id": "cosmetic_straw_hat",
+      "name": "夜市草编帽",
+      "slot": "hat",
+      "unlockLevel": 6,
+      "cost": 380,
+      "effects": {
+        "patienceBonus": 0.015
+      },
+      "setId": "night_market_veteran",
+      "iconPath": "placeholders/avatar/icon_hat_straw.svg",
+      "previewSpritePath": "placeholders/avatar/icon_hat_straw.svg",
+      "tags": [
+        "cosmetic",
+        "patience"
+      ]
+    },
+    {
+      "id": "cosmetic_mint_tee",
+      "name": "薄荷条纹衫",
+      "slot": "clothes",
+      "unlockLevel": 5,
+      "cost": 300,
+      "effects": {
+        "patienceBonus": 0.012
+      },
+      "setId": "fresh_service_set",
+      "iconPath": "placeholders/avatar/icon_clothes_mint.svg",
+      "previewSpritePath": "placeholders/avatar/icon_clothes_mint.svg",
+      "tags": [
+        "cosmetic",
+        "clothes"
+      ]
+    },
+    {
+      "id": "cosmetic_cooling_shirt",
+      "name": "透气工装衫",
+      "slot": "clothes",
+      "unlockLevel": 18,
+      "cost": 820,
+      "effects": {
+        "speedBonus": 0.018
+      },
+      "iconPath": "placeholders/avatar/icon_clothes_work.svg",
+      "previewSpritePath": "placeholders/avatar/icon_clothes_work.svg",
+      "tags": [
+        "cosmetic",
+        "speed"
+      ]
+    },
+    {
+      "id": "cosmetic_canvas_apron",
+      "name": "耐脏帆布围裙",
+      "slot": "apron",
+      "unlockLevel": 10,
+      "cost": 520,
+      "effects": {
+        "costReduce": 0.015,
+        "complaintReduce": 0.01
+      },
+      "setId": "night_market_veteran",
+      "iconPath": "placeholders/avatar/icon_apron_canvas.svg",
+      "previewSpritePath": "placeholders/avatar/icon_apron_canvas.svg",
+      "tags": [
+        "cosmetic",
+        "cost_control"
+      ]
+    },
+    {
+      "id": "cosmetic_lemon_apron",
+      "name": "柠檬印花围裙",
+      "slot": "apron",
+      "unlockLevel": 12,
+      "cost": 560,
+      "effects": {
+        "tipBonus": 0.018
+      },
+      "setId": "fresh_service_set",
+      "iconPath": "placeholders/avatar/icon_apron_lemon.svg",
+      "previewSpritePath": "placeholders/avatar/icon_apron_lemon.svg",
+      "tags": [
+        "cosmetic",
+        "tip"
+      ]
+    },
+    {
+      "id": "cosmetic_light_shoes",
+      "name": "轻便胶鞋",
+      "slot": "shoes",
+      "unlockLevel": 16,
+      "cost": 760,
+      "effects": {
+        "speedBonus": 0.02
+      },
+      "setId": "night_market_veteran",
+      "iconPath": "placeholders/avatar/icon_shoes_light.svg",
+      "previewSpritePath": "placeholders/avatar/icon_shoes_light.svg",
+      "tags": [
+        "cosmetic",
+        "speed"
+      ]
+    },
+    {
+      "id": "cosmetic_anti_slip_sneakers",
+      "name": "防滑运动鞋",
+      "slot": "shoes",
+      "unlockLevel": 22,
+      "cost": 940,
+      "effects": {
+        "speedBonus": 0.025
+      },
+      "setId": "fresh_service_set",
+      "iconPath": "placeholders/avatar/icon_shoes_sneakers.svg",
+      "previewSpritePath": "placeholders/avatar/icon_shoes_sneakers.svg",
+      "tags": [
+        "cosmetic",
+        "speed"
+      ]
+    },
+    {
+      "id": "cosmetic_cashier_gloves",
+      "name": "收银防烫手套",
+      "slot": "gloves",
+      "unlockLevel": 20,
+      "cost": 880,
+      "effects": {
+        "complaintReduce": 0.012,
+        "tipBonus": 0.01
+      },
+      "iconPath": "placeholders/avatar/icon_gloves_cashier.svg",
+      "previewSpritePath": "placeholders/avatar/icon_gloves_cashier.svg",
+      "tags": [
+        "cosmetic",
+        "complaint"
+      ]
+    },
+    {
+      "id": "cosmetic_bamboo_tongs",
+      "name": "竹柄夹子",
+      "slot": "tool",
+      "unlockLevel": 24,
+      "cost": 1080,
+      "effects": {
+        "speedBonus": 0.03
+      },
+      "setId": "night_market_veteran",
+      "iconPath": "placeholders/avatar/icon_tool_tongs.svg",
+      "previewSpritePath": "placeholders/avatar/icon_tool_tongs.svg",
+      "tags": [
+        "cosmetic",
+        "tool"
+      ]
+    },
+    {
+      "id": "cosmetic_pro_spatula",
+      "name": "顺手铁铲",
+      "slot": "tool",
+      "unlockLevel": 28,
+      "cost": 1380,
+      "effects": {
+        "speedBonus": 0.045,
+        "complaintReduce": 0.015
+      },
+      "iconPath": "placeholders/avatar/icon_tool_spatula.svg",
+      "previewSpritePath": "placeholders/avatar/icon_tool_spatula.svg",
+      "tags": [
+        "cosmetic",
+        "tool"
+      ]
+    }
+  ]
+}

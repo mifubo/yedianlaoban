@@ -3,6 +3,7 @@ import { LevelResult } from './GameSession';
 
 export type GameResumeCustomerStatus = 'waiting' | 'served' | 'left';
 export type GameResumeCookingSlotStatus = 'idle' | 'cooking';
+export type GrowthViewMode = 'commercialStreet' | 'shop' | 'outfit' | 'equipmentManagement' | 'personalGrowth';
 
 export interface GameResumeSpawnItem {
   spawnAtSec: number;
@@ -57,6 +58,7 @@ export class GameContext {
   private static cached: GameContext | null = null;
 
   selectedLevelId = 1;
+  growthViewMode: GrowthViewMode = 'commercialStreet';
   configs: RuntimeConfig | null = null;
   lastResult: LevelResult | null = null;
   private failedLevelResumeState: GameResumeState | null = null;
@@ -75,6 +77,10 @@ export class GameContext {
 
   selectLevel(levelId: number): void {
     this.selectedLevelId = levelId;
+  }
+
+  selectGrowthView(mode: GrowthViewMode): void {
+    this.growthViewMode = mode;
   }
 
   setFailedLevelResumeState(state: GameResumeState): void {

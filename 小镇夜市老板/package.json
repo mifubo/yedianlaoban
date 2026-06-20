@@ -10,7 +10,8 @@
     "preview": "python3 -m http.server 5173",
     "typecheck": "tsc -p tsconfig.check.json --noEmit",
     "validate:configs": "node tools/validate-configs.mjs",
-    "test:mvp": "node tools/simulate-mvp.mjs"
+    "test:mvp": "node tools/simulate-mvp.mjs && node tools/test-avatar-cosmetics.mjs",
+    "check:economy": "node tools/check-economy.mjs"
   },
   "devDependencies": {
     "typescript": "^5.5.0"

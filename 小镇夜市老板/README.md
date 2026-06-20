@@ -79,7 +79,7 @@ await ConfigLoader.load({ kind: 'hybrid' });
 
 - `HomeScene.ts`：加载配置、读取存档、进入当前关、打开升级页。
 - `GameScene.ts`：核心营业循环。支持开始/暂停/继续/结束、按关卡配置生成顾客、生成订单、设备制作、点击顾客上菜、耐心倒计时、金币/连击/超时统计和自动结算。
-- `ResultScene.ts`：读取 `GameContext.lastResult`，处理基础金币、广告翻倍 mock、重玩、下一关。
+- `ResultScene.ts`：读取 `GameContext.lastResult`，处理基础金币、广告追加金币 mock、重玩、下一关。
 - `UpgradeScene.ts`：读取配置和存档，预览/购买铁板升级与菜品升级。
 
 场景间共享少量状态使用 `GameContext`，长期数据使用 `SaveSystem` 写入本地存档。

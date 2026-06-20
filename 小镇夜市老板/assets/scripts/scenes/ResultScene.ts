@@ -56,21 +56,20 @@ export class ResultScene extends Component {
     SaveSystem.applyLevelResult(saveData, result);
     SaveSystem.save(saveData);
     result.rewardClaimed = true;
-    result.canWatchDoubleRewardAd = false;
 
     return true;
   }
 
-  async claimDoubleRewardByAd(): Promise<boolean> {
+  async claimSettlementBonusByAd(): Promise<boolean> {
     const result = GameContext.instance.lastResult;
-    if (!result || result.rewardClaimed || !result.canWatchDoubleRewardAd) {
+    if (!result || !result.canWatchSettlementBonusAd || result.settlementAdBonusCoins <= 0) {
       return false;
     }
 
     const saveData = SaveSystem.load();
     const levelKey = String(result.levelId);
-    if (saveData.adState.settlementDoubleWatchedByLevel[levelKey]) {
-      result.canWatchDoubleRewardAd = false;
+    if (saveData.adState.settlementBonusWatchedByLevel[levelKey]) {
+      result.canWatchSettlementBonusAd = false;
       return false;
     }
 
@@ -79,14 +78,23 @@ export class ResultScene extends Component {
       return false;
     }
 
-    result.finalRewardCoins = result.baseRewardCoins * 2;
-    result.canWatchDoubleRewardAd = false;
-    result.rewardClaimed = true;
-    saveData.adState.settlementDoubleWatchedByLevel[levelKey] = true;
-    SaveSystem.applyLevelResult(saveData, result);
+    if (result.rewardClaimed) {
+      SaveSystem.addCoins(saveData, result.settlementAdBonusCoins);
+    } else {
+      result.finalRewardCoins = result.baseRewardCoins + result.settlementAdBonusCoins;
+      result.rewardClaimed = true;
+      SaveSystem.applyLevelResult(saveData, result);
+    }
+
+    result.canWatchSettlementBonusAd = false;
+    saveData.adState.settlementBonusWatchedByLevel[levelKey] = true;
     SaveSystem.save(saveData);
 
     return true;
+  }
+
+  async claimDoubleRewardByAd(): Promise<boolean> {
+    return this.claimSettlementBonusByAd();
   }
 
   async extendFailedLevelByAd(): Promise<boolean> {

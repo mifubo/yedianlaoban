@@ -1,6 +1,6 @@
 import { _decorator, Component, director, Label } from 'cc';
 import { ConfigLoader } from '../core/config/ConfigLoader';
-import { RuntimeConfig } from '../core/config/types';
+import { AvatarGender, AvatarId, CosmeticItemConfig, CosmeticItemId, RuntimeConfig } from '../core/config/types';
 import { GameContext } from '../core/game/GameContext';
 import { SceneName } from '../core/game/SceneNames';
 import { PlayerSaveData, SaveSystem } from '../core/save/SaveSystem';
@@ -13,6 +13,18 @@ export interface HomeSceneSnapshot {
   coins: number;
   completedLevelCount: number;
   totalStars: number;
+  selectedAvatar: {
+    id: AvatarId;
+    name: string;
+    gender: AvatarGender;
+    portraitPath: string;
+  };
+  avatarSelectionLocked: boolean;
+  equippedCosmetics: {
+    id: CosmeticItemId;
+    name: string;
+    slot: string;
+  }[];
 }
 
 @ccclass('HomeScene')
@@ -28,6 +40,12 @@ export class HomeScene extends Component {
 
   @property(Label)
   starLabel: Label | null = null;
+
+  @property(Label)
+  avatarLabel: Label | null = null;
+
+  @property(Label)
+  equippedCosmeticsLabel: Label | null = null;
 
   private isReady = false;
   private configs: RuntimeConfig | null = null;
@@ -48,6 +66,26 @@ export class HomeScene extends Component {
   }
 
   openUpgrade(): void {
+    this.openCommercialStreet();
+  }
+
+  openCommercialStreet(): void {
+    GameContext.instance.selectGrowthView('commercialStreet');
+    director.loadScene(SceneName.Upgrade);
+  }
+
+  openPersonalGrowth(): void {
+    GameContext.instance.selectGrowthView('personalGrowth');
+    director.loadScene(SceneName.Upgrade);
+  }
+
+  openOutfit(): void {
+    GameContext.instance.selectGrowthView('outfit');
+    director.loadScene(SceneName.Upgrade);
+  }
+
+  openEquipmentManagement(): void {
+    GameContext.instance.selectGrowthView('equipmentManagement');
     director.loadScene(SceneName.Upgrade);
   }
 
@@ -60,6 +98,13 @@ export class HomeScene extends Component {
       coins: this.saveData.coins,
       completedLevelCount: this.saveData.completedLevels.length,
       totalStars: SaveSystem.getTotalStars(this.saveData),
+      selectedAvatar: this.getSelectedAvatarSnapshot(),
+      avatarSelectionLocked: this.saveData.avatarSelectionLocked,
+      equippedCosmetics: this.getEquippedCosmetics().map((cosmetic) => ({
+        id: cosmetic.id,
+        name: cosmetic.name,
+        slot: cosmetic.slot,
+      })),
     };
   }
 
@@ -86,6 +131,14 @@ export class HomeScene extends Component {
     if (this.starLabel) {
       this.starLabel.string = `${snapshot.totalStars}`;
     }
+
+    if (this.avatarLabel) {
+      this.avatarLabel.string = snapshot.selectedAvatar.name;
+    }
+
+    if (this.equippedCosmeticsLabel) {
+      this.equippedCosmeticsLabel.string = snapshot.equippedCosmetics.map((item) => item.name).join(' / ') || '未装备装扮';
+    }
   }
 
   private getPlayableLevelId(saveData: PlayerSaveData): number {
@@ -94,5 +147,29 @@ export class HomeScene extends Component {
     }
 
     return this.configs.levels[this.configs.levels.length - 1]?.id ?? 1;
+  }
+
+  private getSelectedAvatarSnapshot(): HomeSceneSnapshot['selectedAvatar'] {
+    const fallback = this.configs?.avatars[0];
+    const avatar = this.configs?.avatarById.get(this.saveData.selectedAvatarId) ?? fallback;
+    return {
+      id: avatar?.id ?? 'avatar_male_boss',
+      name: avatar?.name ?? '男老板',
+      gender: avatar?.gender ?? 'male',
+      portraitPath: avatar?.portraitPath ?? 'placeholders/avatar/male_boss.svg',
+    };
+  }
+
+  private getEquippedCosmetics(): CosmeticItemConfig[] {
+    if (!this.configs) {
+      return [];
+    }
+
+    return Object.values(this.saveData.equippedCosmeticIds)
+      .map((cosmeticId) => (cosmeticId ? this.configs?.cosmeticById.get(cosmeticId) : undefined))
+      .filter((cosmetic): cosmetic is CosmeticItemConfig => {
+        return Boolean(cosmetic && this.saveData.ownedCosmeticIds.includes(cosmetic.id));
+      })
+      .sort((a, b) => a.slot.localeCompare(b.slot));
   }
 }

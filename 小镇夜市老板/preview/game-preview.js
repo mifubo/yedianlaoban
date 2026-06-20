@@ -3,19 +3,31 @@ const CONFIG_PATHS = {
   dishes: "../assets/resources/configs/dishes.json",
   customers: "../assets/resources/configs/customers.json",
   equipments: "../assets/resources/configs/equipments.json",
+  storeUpgrades: "../assets/resources/configs/store_upgrades.json",
+  cosmetics: "../assets/resources/configs/cosmetics.json",
 };
 
-const SAVE_KEY = "town_night_market_boss_preview_save_v1";
-const MVP_LEVEL_LIMIT = 10;
-const MAX_QUICK_SERVICE_BONUS = 0.45;
-const COMBO_REWARD_BONUS_PER_STEP = 0.05;
-const MAX_COMBO_REWARD_BONUS = 0.25;
-const SERVICE_COIN_BONUS = 8;
-const DISH_PRICE_BONUS_PER_LEVEL = 0.08;
-const DISH_MAX_LEVEL = 10;
+const SAVE_KEY = "town_night_market_boss_preview_save_v3";
+const LEGACY_SAVE_KEYS = ["town_night_market_boss_preview_save_v2", "town_night_market_boss_preview_save_v1"];
+const MVP_LEVEL_LIMIT = 30;
+const MAX_QUICK_TIP_BONUS = 0.34;
+const COMBO_TIP_BONUS_PER_STEP = 0.04;
+const MAX_COMBO_TIP_BONUS = 0.24;
+const SERVICE_COIN_BONUS = 11;
+const DEFAULT_DISH_PRICE_BONUS_PER_LEVEL = 0.05;
+const DEFAULT_DISH_MAX_LEVEL = 15;
+const DEFAULT_INGREDIENT_COST_RATE = 0.32;
 const EQUIPMENT_SLOT_LEVEL_STEP = 2;
+const SETTLEMENT_AD_BONUS_RATE = 0.5;
+const SETTLEMENT_AD_GOAL_CAP_RATE = 0.6;
+const FAIL_EXTEND_SECONDS = 15;
 
 const DEFAULT_SAVE_DATA = {
+  schemaVersion: 3,
+  playerId: "",
+  selectedAvatarId: "avatar_male_boss",
+  selectedGender: "male",
+  avatarSelectionLocked: false,
   currentLevelId: 1,
   coins: 0,
   completedLevels: [],
@@ -30,9 +42,23 @@ const DEFAULT_SAVE_DATA = {
     dish_002: 1,
     dish_003: 1,
   },
+  storeUpgradeLevels: {
+    store_signboard: 1,
+    store_tables: 1,
+    store_fridge: 1,
+    store_cleanliness: 1,
+  },
+  ownedCosmeticIds: [],
+  equippedCosmeticIds: {},
   adState: {
-    settlementDoubleWatchedByLevel: {},
+    settlementBonusWatchedByLevel: {},
     failExtendWatchedByLevel: {},
+    dailyRewardWatchedByDate: {},
+  },
+  cloudSync: {
+    revision: 0,
+    lastSyncedAt: "",
+    lastSyncStatus: "idle",
   },
 };
 
@@ -60,9 +86,13 @@ const state = {
   logLines: [],
   lastFrameMs: 0,
   lastResult: null,
+  growthViewMode: "commercialStreet",
+  activeShopId: "outfitShop",
+  shopkeeperLineIndex: 0,
 };
 
 const dom = {
+  avatarSelectView: document.querySelector("#avatarSelectView"),
   homeView: document.querySelector("#homeView"),
   gameView: document.querySelector("#gameView"),
   upgradeView: document.querySelector("#upgradeView"),
@@ -70,8 +100,16 @@ const dom = {
   homeCoinText: document.querySelector("#homeCoinText"),
   homeStarText: document.querySelector("#homeStarText"),
   homeProgressText: document.querySelector("#homeProgressText"),
+  homeTitleButton: document.querySelector("#homeTitleButton"),
+  homeAdminPanel: document.querySelector("#homeAdminPanel"),
+  selectMaleAvatarButton: document.querySelector("#selectMaleAvatarButton"),
+  selectFemaleAvatarButton: document.querySelector("#selectFemaleAvatarButton"),
   playCurrentButton: document.querySelector("#playCurrentButton"),
   homeLevelOneButton: document.querySelector("#homeLevelOneButton"),
+  homeOutfitButton: document.querySelector("#homeOutfitButton"),
+  homeEquipmentButton: document.querySelector("#homeEquipmentButton"),
+  homeGrowthButton: document.querySelector("#homeGrowthButton"),
+  dailyAdButton: document.querySelector("#dailyAdButton"),
   homeUpgradeButton: document.querySelector("#homeUpgradeButton"),
   clearSaveButton: document.querySelector("#clearSaveButton"),
   gameHomeButton: document.querySelector("#gameHomeButton"),
@@ -89,10 +127,30 @@ const dom = {
   resetButton: document.querySelector("#resetButton"),
   logList: document.querySelector("#logList"),
   upgradeBackButton: document.querySelector("#upgradeBackButton"),
+  upgradeKicker: document.querySelector("#upgradeKicker"),
+  upgradeTitle: document.querySelector("#upgradeTitle"),
+  upgradeCoinMeter: document.querySelector("#upgradeCoinMeter"),
+  upgradeLevelMeter: document.querySelector("#upgradeLevelMeter"),
   upgradeCoinText: document.querySelector("#upgradeCoinText"),
   upgradeLevelText: document.querySelector("#upgradeLevelText"),
-  equipmentUpgradeList: document.querySelector("#equipmentUpgradeList"),
-  dishUpgradeList: document.querySelector("#dishUpgradeList"),
+  outfitSection: document.querySelector("#outfitSection"),
+  upgradeAvatarImage: document.querySelector("#upgradeAvatarImage"),
+  upgradeAvatarText: document.querySelector("#upgradeAvatarText"),
+  upgradeOutfitText: document.querySelector("#upgradeOutfitText"),
+  outfitList: document.querySelector("#outfitList"),
+  marketSection: document.querySelector("#marketSection"),
+  shopSection: document.querySelector("#shopSection"),
+  equipmentManageSection: document.querySelector("#equipmentManageSection"),
+  personalGrowthSection: document.querySelector("#personalGrowthSection"),
+  commercialStreet: document.querySelector("#commercialStreet"),
+  streetBackButton: document.querySelector("#streetBackButton"),
+  shopFixture: document.querySelector("#shopFixture"),
+  shopkeeperButton: document.querySelector("#shopkeeperButton"),
+  shopkeeperBubble: document.querySelector("#shopkeeperBubble"),
+  activeShopName: document.querySelector("#activeShopName"),
+  shopItemList: document.querySelector("#shopItemList"),
+  equipmentManageList: document.querySelector("#equipmentManageList"),
+  personalGrowthList: document.querySelector("#personalGrowthList"),
   resultOverlay: document.querySelector("#resultOverlay"),
   resultTitle: document.querySelector("#resultTitle"),
   resultStats: document.querySelector("#resultStats"),
@@ -105,22 +163,33 @@ const dom = {
 };
 
 async function boot() {
-  const [levels, dishes, customers, equipments] = await Promise.all([
+  const [levels, dishes, customers, equipments, storeUpgrades, cosmeticsRaw] = await Promise.all([
     loadJson(CONFIG_PATHS.levels),
     loadJson(CONFIG_PATHS.dishes),
     loadJson(CONFIG_PATHS.customers),
     loadJson(CONFIG_PATHS.equipments),
+    loadJson(CONFIG_PATHS.storeUpgrades),
+    loadJson(CONFIG_PATHS.cosmetics),
   ]);
+  const cosmeticsConfig = normalizeCosmeticsConfig(cosmeticsRaw);
 
   state.configs = {
     levels,
     dishes,
     customers,
     equipments,
+    storeUpgrades,
+    avatars: cosmeticsConfig.avatars,
+    cosmetics: cosmeticsConfig.items,
+    cosmeticSets: cosmeticsConfig.sets,
     levelById: new Map(levels.map((item) => [item.id, item])),
     dishById: new Map(dishes.map((item) => [item.id, item])),
     customerById: new Map(customers.map((item) => [item.id, item])),
     equipmentById: new Map(equipments.map((item) => [item.id, item])),
+    storeUpgradeById: new Map(storeUpgrades.map((item) => [item.id, item])),
+    avatarById: new Map(cosmeticsConfig.avatars.map((item) => [item.id, item])),
+    cosmeticById: new Map(cosmeticsConfig.items.map((item) => [item.id, item])),
+    cosmeticSetById: new Map(cosmeticsConfig.sets.map((item) => [item.id, item])),
   };
 
   state.saveData = loadSave();
@@ -131,7 +200,12 @@ async function boot() {
 
   dom.playCurrentButton.addEventListener("click", () => enterLevel(getPlayableLevelId()));
   dom.homeLevelOneButton.addEventListener("click", () => enterLevel(1));
-  dom.homeUpgradeButton.addEventListener("click", showUpgrade);
+  dom.dailyAdButton.addEventListener("click", claimDailyAdRewardMock);
+  dom.homeTitleButton.addEventListener("click", toggleHomeAdminPanel);
+  dom.homeUpgradeButton.addEventListener("click", () => showUpgrade("commercialStreet"));
+  dom.homeOutfitButton.addEventListener("click", () => showUpgrade("outfit"));
+  dom.homeEquipmentButton.addEventListener("click", () => showUpgrade("equipmentManagement"));
+  dom.homeGrowthButton.addEventListener("click", () => showUpgrade("personalGrowth"));
   dom.clearSaveButton.addEventListener("click", clearSaveAndRefresh);
   dom.gameHomeButton.addEventListener("click", showHome);
   dom.levelSelect.addEventListener("change", () => enterLevel(Number(dom.levelSelect.value)));
@@ -145,8 +219,14 @@ async function boot() {
   dom.nextButton.addEventListener("click", playNextLevel);
   dom.resultHomeButton.addEventListener("click", showHome);
   dom.upgradeBackButton.addEventListener("click", showHome);
-  dom.equipmentUpgradeList.addEventListener("click", handleUpgradeClick);
-  dom.dishUpgradeList.addEventListener("click", handleUpgradeClick);
+  dom.selectMaleAvatarButton.addEventListener("click", () => selectAvatarByGender("male"));
+  dom.selectFemaleAvatarButton.addEventListener("click", () => selectAvatarByGender("female"));
+  dom.commercialStreet.addEventListener("click", handleShopClick);
+  dom.streetBackButton.addEventListener("click", () => showUpgrade("commercialStreet"));
+  dom.shopkeeperButton.addEventListener("click", cycleShopkeeperLine);
+  dom.shopItemList.addEventListener("click", handleUpgradeClick);
+  dom.outfitList.addEventListener("click", handleUpgradeClick);
+  dom.personalGrowthList.addEventListener("click", handleUpgradeClick);
   dom.customerLane.addEventListener("pointerdown", handleCustomerPointerDown);
   dom.stations.addEventListener("pointerdown", handleStationPointerDown);
   dom.dishButtons.addEventListener("pointerdown", handleDishPointerDown);
@@ -158,6 +238,9 @@ async function boot() {
     enterLevel,
     loadSave,
     clearSaveAndRefresh,
+    selectAvatarByGender,
+    equipCosmeticById,
+    unequipCosmeticById,
   };
 }
 
@@ -182,28 +265,72 @@ function loadJson(path) {
   });
 }
 
+function normalizeCosmeticsConfig(raw) {
+  if (Array.isArray(raw)) {
+    return {
+      avatars: [],
+      items: raw,
+      sets: [],
+    };
+  }
+
+  return {
+    avatars: Array.isArray(raw?.avatars) ? raw.avatars : [],
+    items: Array.isArray(raw?.items) ? raw.items : [],
+    sets: Array.isArray(raw?.sets) ? raw.sets : [],
+  };
+}
+
 function showHome() {
   if (state.phase === "running") {
     state.phase = "paused";
   }
+  state.saveData = loadSave();
   dom.resultOverlay.classList.add("hidden");
+  if (!state.saveData.avatarSelectionLocked) {
+    showView("avatarSelect");
+    return;
+  }
   showView("home");
+  setHomeAdminPanel(false);
   renderHome();
 }
 
-function showUpgrade() {
+function showUpgrade(mode = "commercialStreet") {
   if (state.phase === "running") {
     state.phase = "paused";
   }
+  state.saveData = loadSave();
+  if (!state.saveData.avatarSelectionLocked) {
+    showView("avatarSelect");
+    return;
+  }
+  state.growthViewMode = normalizeGrowthViewMode(mode);
   dom.resultOverlay.classList.add("hidden");
   showView("upgrade");
   renderUpgrade();
 }
 
 function showView(name) {
+  dom.avatarSelectView.classList.toggle("hidden", name !== "avatarSelect");
   dom.homeView.classList.toggle("hidden", name !== "home");
   dom.gameView.classList.toggle("hidden", name !== "game");
   dom.upgradeView.classList.toggle("hidden", name !== "upgrade");
+}
+
+function toggleHomeAdminPanel() {
+  setHomeAdminPanel(dom.homeAdminPanel.classList.contains("hidden"));
+}
+
+function setHomeAdminPanel(isOpen) {
+  dom.homeAdminPanel.classList.toggle("hidden", !isOpen);
+  dom.homeTitleButton.setAttribute("aria-expanded", String(isOpen));
+}
+
+function normalizeGrowthViewMode(mode) {
+  return ["commercialStreet", "shop", "outfit", "equipmentManagement", "personalGrowth"].includes(mode)
+    ? mode
+    : "commercialStreet";
 }
 
 function enterLevel(levelId) {
@@ -419,7 +546,7 @@ function spawnDueCustomers() {
   ) {
     const spawnItem = state.spawnQueue.shift();
     const customerConfig = state.configs.customerById.get(spawnItem.customerId);
-    const maxPatienceSec = customerConfig.basePatience * (state.level.modifiers.patienceMultiplier ?? 1);
+    const maxPatienceSec = getCustomerPatienceSec(customerConfig);
     state.customerSerial += 1;
     state.activeCustomers.push({
       runtimeId: `customer_${state.customerSerial}`,
@@ -464,8 +591,10 @@ function updateCustomerPatience(deltaSec) {
   for (const customer of leaving) {
     state.angryLeaveCount += 1;
     state.combo = 0;
+    const penalty = calculateAngryLeavePenalty();
+    state.earnedCoins = Math.max(0, state.earnedCoins - penalty);
     state.activeCustomers = state.activeCustomers.filter((item) => item.runtimeId !== customer.runtimeId);
-    addLog(`${customer.name} 等急走了`);
+    addLog(`${customer.name} 等急走了${penalty > 0 ? `，客诉 -${penalty}` : ""}`);
     spawnDueCustomers();
   }
 }
@@ -536,8 +665,10 @@ function serveCustomer(runtimeId) {
   if (!hasCookedDishes(customer.orderDishIds)) {
     state.wrongServeCount += 1;
     state.combo = 0;
+    const penalty = calculateWrongServePenalty();
+    state.earnedCoins = Math.max(0, state.earnedCoins - penalty);
     customer.patienceRemainingSec = Math.max(0, customer.patienceRemainingSec - 2);
-    addLog("菜还没齐，上菜失败");
+    addLog(`菜还没齐，上菜失败${penalty > 0 ? `，客诉 -${penalty}` : ""}`);
     return false;
   }
 
@@ -575,16 +706,8 @@ function consumeCookedDishes(orderDishIds) {
 function calculateCustomerReward(customer) {
   const customerConfig = state.configs.customerById.get(customer.configId);
   const patienceRatio = customer.maxPatienceSec <= 0 ? 0 : customer.patienceRemainingSec / customer.maxPatienceSec;
-  const satisfactionBonus = 1 + Math.max(0, patienceRatio) * MAX_QUICK_SERVICE_BONUS;
-  const comboBonus = Math.min(MAX_COMBO_REWARD_BONUS, Math.max(0, state.combo) * COMBO_REWARD_BONUS_PER_STEP);
-  const levelRewardMultiplier = state.level.modifiers.rewardMultiplier ?? 1;
-  const total = customer.orderDishIds.reduce((sum, dishId) => sum + getDishPrice(state.configs.dishById.get(dishId)), 0);
-
-  return Math.max(
-    1,
-    Math.round(total * customerConfig.tipMultiplier * levelRewardMultiplier * (satisfactionBonus + comboBonus)) +
-      SERVICE_COIN_BONUS
-  );
+  const breakdown = calculateCustomerRewardBreakdown(customerConfig, customer.orderDishIds, patienceRatio, state.combo);
+  return breakdown.netCoins;
 }
 
 function pickNextDishForEquipment(equipmentId) {
@@ -705,15 +828,17 @@ function endBusiness() {
     earnedCoins: state.earnedCoins,
     baseRewardCoins: Math.max(0, state.earnedCoins),
     finalRewardCoins: Math.max(0, state.earnedCoins),
+    settlementAdBonusCoins: success ? calculateSettlementAdBonus(state.level, Math.max(0, state.earnedCoins)) : 0,
     servedCustomers: state.servedCustomers,
     maxCombo: state.maxCombo,
     angryLeaveCount: state.angryLeaveCount,
     wrongServeCount: state.wrongServeCount,
     stars: success ? calculateStars() : 0,
     rewardClaimed: false,
-    canWatchDoubleRewardAd: success && state.earnedCoins > 0,
+    canWatchSettlementBonusAd: false,
     canWatchExtendTimeAd: !success && canResumeFailedLevel(),
   };
+  state.lastResult.canWatchSettlementBonusAd = success && state.lastResult.settlementAdBonusCoins > 0;
 
   if (success) {
     settleBaseReward(state.lastResult);
@@ -736,7 +861,9 @@ function renderResultDialog() {
     ? `已入账金币：${result.baseRewardCoins}`
     : `待领金币：${result.finalRewardCoins}`;
   const adBonusLine =
-    result.outcome === "success" && result.canWatchDoubleRewardAd ? `广告可追加：${result.baseRewardCoins}` : null;
+    result.outcome === "success" && result.canWatchSettlementBonusAd
+      ? `广告可追加：${result.settlementAdBonusCoins}`
+      : null;
 
   dom.resultStats.innerHTML = [
     `金币：${state.earnedCoins} / ${state.level.goals.coin1}`,
@@ -753,11 +880,11 @@ function renderResultDialog() {
 
   const levelKey = String(result.levelId);
   dom.claimButton.textContent = result.rewardClaimed ? "已领取" : "领取金币";
-  dom.adDoubleButton.textContent = result.rewardClaimed ? "广告追加金币 mock" : "广告翻倍 mock";
+  dom.adDoubleButton.textContent = "广告追加金币 mock";
   dom.claimButton.disabled = result.rewardClaimed || result.finalRewardCoins <= 0;
   dom.adDoubleButton.disabled =
-    !result.canWatchDoubleRewardAd ||
-    state.saveData.adState.settlementDoubleWatchedByLevel[levelKey] === true;
+    !result.canWatchSettlementBonusAd ||
+    state.saveData.adState.settlementBonusWatchedByLevel[levelKey] === true;
   dom.adExtendButton.disabled =
     result.rewardClaimed ||
     !result.canWatchExtendTimeAd ||
@@ -807,27 +934,33 @@ function claimBaseReward() {
 }
 
 function claimAdDoubleMock() {
+  return claimSettlementBonusMock();
+}
+
+function claimSettlementBonusMock() {
   const result = state.lastResult;
-  if (!result || result.outcome !== "success" || !result.canWatchDoubleRewardAd) {
+  if (!result || result.outcome !== "success" || !result.canWatchSettlementBonusAd || result.settlementAdBonusCoins <= 0) {
     return false;
   }
 
   const levelKey = String(result.levelId);
-  if (state.saveData.adState.settlementDoubleWatchedByLevel[levelKey]) {
-    result.canWatchDoubleRewardAd = false;
+  if (state.saveData.adState.settlementBonusWatchedByLevel[levelKey]) {
+    result.canWatchSettlementBonusAd = false;
     renderResultDialog();
     return false;
   }
 
   if (!result.rewardClaimed) {
+    result.finalRewardCoins = result.baseRewardCoins + result.settlementAdBonusCoins;
     settleBaseReward(result);
+  } else {
+    addRewardCoins(result.settlementAdBonusCoins);
   }
 
-  addRewardCoins(result.baseRewardCoins);
-  result.canWatchDoubleRewardAd = false;
-  state.saveData.adState.settlementDoubleWatchedByLevel[levelKey] = true;
+  result.canWatchSettlementBonusAd = false;
+  state.saveData.adState.settlementBonusWatchedByLevel[levelKey] = true;
   saveGame();
-  addLog(`广告 mock 完成，追加 ${result.baseRewardCoins} 金币`);
+  addLog(`广告 mock 完成，追加 ${result.settlementAdBonusCoins} 金币`);
   renderResultDialog();
   render();
   return true;
@@ -848,14 +981,33 @@ function claimExtendTimeMock() {
 
   state.saveData.adState.failExtendWatchedByLevel[levelKey] = true;
   saveGame();
-  state.bonusTimeSec += 15;
+  state.bonusTimeSec += FAIL_EXTEND_SECONDS;
   state.timeRemainingSec = Math.max(0, getTotalDurationSec() - state.elapsedSec);
   state.phase = "running";
   state.lastFrameMs = performance.now();
   state.lastResult = null;
   dom.resultOverlay.classList.add("hidden");
-  addLog("广告 mock 完成，续时 15 秒");
+  addLog(`广告 mock 完成，续时 ${FAIL_EXTEND_SECONDS} 秒`);
   render();
+  return true;
+}
+
+function claimDailyAdRewardMock() {
+  state.saveData = loadSave();
+  const dateKey = getLocalDateKey();
+  if (state.saveData.adState.dailyRewardWatchedByDate[dateKey]) {
+    addLog("今日广告奖励已领取");
+    renderHome();
+    return false;
+  }
+
+  const chapter = getCurrentChapter();
+  const rewardCoins = 80 + chapter * 30;
+  state.saveData.adState.dailyRewardWatchedByDate[dateKey] = true;
+  state.saveData.coins += rewardCoins;
+  saveGame();
+  addLog(`每日广告 mock 完成，领取 ${rewardCoins} 金币`);
+  renderHome();
   return true;
 }
 
@@ -905,6 +1057,9 @@ function renderHome() {
   dom.homeStarText.textContent = String(getTotalStars());
   dom.homeProgressText.textContent = `${getMvpCompletedCount()}/${MVP_LEVEL_LIMIT}`;
   dom.playCurrentButton.textContent = `进入第 ${currentLevelId} 关`;
+  const dailyRewardClaimed = state.saveData.adState.dailyRewardWatchedByDate[getLocalDateKey()] === true;
+  dom.dailyAdButton.disabled = dailyRewardClaimed;
+  dom.dailyAdButton.textContent = dailyRewardClaimed ? "今日已领取" : "每日广告奖励";
 }
 
 function render() {
@@ -1011,34 +1166,230 @@ function renderUpgrade() {
   state.saveData = loadSave();
   dom.upgradeCoinText.textContent = String(state.saveData.coins);
   dom.upgradeLevelText.textContent = String(state.saveData.currentLevelId);
+  renderGrowthModeHeader();
 
-  dom.equipmentUpgradeList.innerHTML = state.configs.equipments
-    .filter((equipment) => equipment.unlockLevel <= MVP_LEVEL_LIMIT)
+  const isStreet = state.growthViewMode === "commercialStreet";
+  const isShop = state.growthViewMode === "shop";
+  const isOutfit = state.growthViewMode === "outfit";
+  const isEquipmentManagement = state.growthViewMode === "equipmentManagement";
+  const isPersonalGrowth = state.growthViewMode === "personalGrowth";
+
+  dom.upgradeLevelMeter.classList.toggle("hidden", isStreet || isShop);
+  dom.marketSection.classList.toggle("hidden", !isStreet);
+  dom.shopSection.classList.toggle("hidden", !isShop);
+  dom.outfitSection.classList.toggle("hidden", !isOutfit);
+  dom.equipmentManageSection.classList.toggle("hidden", !isEquipmentManagement);
+  dom.personalGrowthSection.classList.toggle("hidden", !isPersonalGrowth);
+
+  if (isStreet) {
+    renderCommercialStreet();
+  } else if (isShop) {
+    renderShopInterior();
+  } else if (isOutfit) {
+    renderOutfitManagement();
+  } else if (isEquipmentManagement) {
+    renderEquipmentManagement();
+  } else if (isPersonalGrowth) {
+    renderPersonalGrowth();
+  }
+}
+
+function renderUpgradeCard(kind, config, preview) {
+  const lockedClass = preview.isUnlocked ? "" : " locked";
+  const actionText = getUpgradeActionText(kind, preview);
+  const isDisabled = kind === "cosmetic" ? !canUseCosmeticAction(preview) : !preview.canUpgrade;
+  return `
+    <div class="upgrade-card${lockedClass}">
+      <div class="upgrade-card-header">
+        <span>${config.name}</span>
+        <span>${kind === "cosmetic" ? preview.slot : `Lv.${preview.currentLevel}`}</span>
+      </div>
+      <div class="upgrade-effect">${preview.effectText}</div>
+      <div class="upgrade-cost">金币 ${state.saveData.coins}</div>
+      <button type="button" data-upgrade-kind="${kind}" data-upgrade-id="${config.id}" ${isDisabled ? "disabled" : ""}>${actionText}</button>
+    </div>
+  `;
+}
+
+function renderGrowthModeHeader() {
+  if (state.growthViewMode === "personalGrowth") {
+    dom.upgradeKicker.textContent = "个人成长";
+    dom.upgradeTitle.textContent = "手艺成长";
+    return;
+  }
+  if (state.growthViewMode === "outfit") {
+    dom.upgradeKicker.textContent = "角色衣柜";
+    dom.upgradeTitle.textContent = "装扮";
+    return;
+  }
+  if (state.growthViewMode === "equipmentManagement") {
+    dom.upgradeKicker.textContent = "摊位资产";
+    dom.upgradeTitle.textContent = "设备管理";
+    return;
+  }
+  if (state.growthViewMode === "shop") {
+    const shop = getActiveShop();
+    dom.upgradeKicker.textContent = "商业街店铺";
+    dom.upgradeTitle.textContent = shop.name;
+    return;
+  }
+
+  dom.upgradeKicker.textContent = "老街商业街";
+  dom.upgradeTitle.textContent = "商业街";
+}
+
+function renderCommercialStreet() {
+  const shop = getActiveShop();
+  for (const button of dom.commercialStreet.querySelectorAll("[data-shop-id]")) {
+    button.classList.toggle("active", button.dataset.shopId === shop.id);
+    button.classList.remove("entering");
+  }
+}
+
+function renderShopInterior() {
+  const shop = getActiveShop();
+  dom.activeShopName.textContent = shop.name;
+  dom.shopFixture.className = `shop-fixture ${shop.fixtureClass}`;
+  dom.shopkeeperBubble.textContent = getCurrentShopkeeperLine(shop);
+  dom.shopItemList.innerHTML = shop.items.map(({ kind, config, preview }) => renderUpgradeCard(kind, config, preview)).join("");
+}
+
+function renderOutfitManagement() {
+  renderAvatarSummary("upgrade");
+  const ownedCosmetics = state.configs.cosmetics
+    .filter((cosmetic) => state.saveData.ownedCosmeticIds.includes(cosmetic.id))
+    .sort((a, b) => a.slot.localeCompare(b.slot) || a.unlockLevel - b.unlockLevel)
+    .map((cosmetic) => renderUpgradeCard("cosmetic", cosmetic, previewCosmetic(cosmetic)));
+
+  dom.outfitList.innerHTML =
+    ownedCosmetics.join("") || '<div class="empty-state">还没有装扮，去商业街的装扮铺看看。</div>';
+}
+
+function renderEquipmentManagement() {
+  dom.equipmentManageList.innerHTML = state.configs.equipments
+    .filter((equipment) => state.saveData.currentLevelId >= equipment.unlockLevel)
     .sort((a, b) => a.unlockLevel - b.unlockLevel)
-    .map((equipment) => renderUpgradeCard("equipment", equipment, previewEquipment(equipment)))
-    .join("");
+    .map((equipment) => renderEquipmentManageCard(equipment))
+    .join("") || '<div class="empty-state">还没有设备。</div>';
+}
 
-  dom.dishUpgradeList.innerHTML = state.configs.dishes
+function renderEquipmentManageCard(equipment) {
+  const maxLevel = getEquipmentMaxLevel(equipment);
+  const level = getSavedLevel(state.saveData.equipmentLevels[equipment.id], maxLevel);
+  const isUnlocked = state.saveData.currentLevelId >= equipment.unlockLevel;
+  const slotCount = getEquipmentSlotCountAtLevel(equipment, level);
+  const speedBonus = Math.round(getEquipmentSpeedBonus(equipment, level) * 100);
+  return `
+    <div class="upgrade-card${isUnlocked ? "" : " locked"}">
+      <div class="upgrade-card-header">
+        <span>${equipment.name}</span>
+        <span>${isUnlocked ? `Lv.${level}` : `第${equipment.unlockLevel}关`}</span>
+      </div>
+      <div class="upgrade-effect">${isUnlocked ? `工位 ${slotCount}，制作时间-${speedBonus}%` : "尚未购置"}</div>
+      <div class="upgrade-cost">设备资产</div>
+    </div>
+  `;
+}
+
+function getActiveShop() {
+  const shops = getCommercialStreetShops();
+  return shops.find((shop) => shop.id === state.activeShopId) ?? shops[0];
+}
+
+function getCurrentShopkeeperLine(shop) {
+  return shop.lines[state.shopkeeperLineIndex % shop.lines.length];
+}
+
+function cycleShopkeeperLine() {
+  const shop = getActiveShop();
+  state.shopkeeperLineIndex = (state.shopkeeperLineIndex + 1) % shop.lines.length;
+  dom.shopkeeperBubble.textContent = getCurrentShopkeeperLine(shop);
+}
+
+function enterShop(shopId) {
+  if (!getCommercialStreetShops().some((shop) => shop.id === shopId)) {
+    return;
+  }
+
+  state.activeShopId = shopId;
+  state.shopkeeperLineIndex = Math.floor(Math.random() * getActiveShop().lines.length);
+  showUpgrade("shop");
+}
+
+function renderPersonalGrowth() {
+  dom.personalGrowthList.innerHTML = state.configs.dishes
     .filter((dish) => dish.unlockLevel <= MVP_LEVEL_LIMIT)
     .sort((a, b) => a.unlockLevel - b.unlockLevel)
     .map((dish) => renderUpgradeCard("dish", dish, previewDish(dish)))
     .join("");
 }
 
-function renderUpgradeCard(kind, config, preview) {
-  const lockedClass = preview.isUnlocked ? "" : " locked";
-  const actionText = preview.isMaxLevel ? "满级" : preview.isUnlocked ? `升级 ${preview.cost}` : preview.lockedReason;
-  return `
-    <div class="upgrade-card${lockedClass}">
-      <div class="upgrade-card-header">
-        <span>${config.name}</span>
-        <span>Lv.${preview.currentLevel}</span>
-      </div>
-      <div class="upgrade-effect">${preview.effectText}</div>
-      <div class="upgrade-cost">金币 ${state.saveData.coins}</div>
-      <button type="button" data-upgrade-kind="${kind}" data-upgrade-id="${config.id}" ${preview.canUpgrade ? "" : "disabled"}>${actionText}</button>
-    </div>
-  `;
+function getCommercialStreetShops() {
+  return [
+    {
+      id: "outfitShop",
+      name: "装扮铺",
+      fixtureClass: "wardrobe",
+      lines: ["新围裙刚到，试试手感。", "人靠衣装，摊靠招牌。", "这件耐脏，忙起来不怕溅油。"],
+      items: state.configs.cosmetics
+        .filter((cosmetic) => cosmetic.unlockLevel <= MVP_LEVEL_LIMIT)
+        .sort((a, b) => a.unlockLevel - b.unlockLevel)
+        .map((config) => ({ kind: "cosmetic", config, preview: previewCosmetic(config) })),
+    },
+    {
+      id: "applianceShop",
+      name: "电器铺",
+      fixtureClass: "appliance-shelf",
+      lines: ["铁板火候稳，出餐就稳。", "饮品台升级，放学潮也不乱。", "设备趁早添，排队少皱眉。"],
+      items: state.configs.equipments
+        .filter((equipment) => equipment.unlockLevel <= MVP_LEVEL_LIMIT)
+        .sort((a, b) => a.unlockLevel - b.unlockLevel)
+        .map((config) => ({ kind: "equipment", config, preview: previewEquipment(config) })),
+    },
+    {
+      id: "kitchenMall",
+      name: "厨具商场",
+      fixtureClass: "kitchen-shelf",
+      lines: ["小摊也要有大排面。", "灯牌亮一点，客人自然看得见。", "好厨具省心，老板少操心。"],
+      items: state.configs.storeUpgrades
+        .filter((storeUpgrade) => storeUpgrade.unlockLevel <= MVP_LEVEL_LIMIT)
+        .sort((a, b) => a.unlockLevel - b.unlockLevel)
+        .map((config) => ({ kind: "store", config, preview: previewStoreUpgrade(config) })),
+    },
+  ];
+}
+
+function getUpgradeActionText(kind, preview) {
+  if (kind === "cosmetic") {
+    if (!preview.isUnlocked) {
+      return preview.lockedReason;
+    }
+    if (!preview.isOwned) {
+      return `购买 ${preview.cost}`;
+    }
+    return preview.isEquipped ? "卸下" : "装备";
+  }
+
+  if (preview.isMaxLevel) {
+    return "已满";
+  }
+  if (!preview.isUnlocked) {
+    return preview.lockedReason;
+  }
+  if (kind === "dish") {
+    return `成长 ${preview.cost}`;
+  }
+  return `添置 ${preview.cost}`;
+}
+
+function canUseCosmeticAction(preview) {
+  if (!preview.isUnlocked) {
+    return false;
+  }
+  if (!preview.isOwned) {
+    return preview.canUpgrade;
+  }
+  return true;
 }
 
 function handleUpgradeClick(event) {
@@ -1050,10 +1401,29 @@ function handleUpgradeClick(event) {
   buyUpgrade(button.dataset.upgradeKind, button.dataset.upgradeId);
 }
 
+function handleShopClick(event) {
+  const button = event.target.closest("[data-shop-id]");
+  if (!button) {
+    return;
+  }
+
+  state.activeShopId = button.dataset.shopId;
+  for (const hotspot of dom.commercialStreet.querySelectorAll("[data-shop-id]")) {
+    hotspot.classList.toggle("active", hotspot === button);
+    hotspot.classList.remove("entering");
+  }
+  button.classList.add("entering");
+  window.setTimeout(() => enterShop(button.dataset.shopId), 220);
+}
+
 function buyUpgrade(kind, id) {
   state.saveData = loadSave();
-  const config = kind === "equipment" ? state.configs.equipmentById.get(id) : state.configs.dishById.get(id);
-  const preview = kind === "equipment" ? previewEquipment(config) : previewDish(config);
+  const config = getUpgradeConfig(kind, id);
+  const preview = getUpgradePreview(kind, config);
+  if (kind === "cosmetic") {
+    return useCosmeticAction(config, preview);
+  }
+
   if (!preview.canUpgrade) {
     return false;
   }
@@ -1061,12 +1431,62 @@ function buyUpgrade(kind, id) {
   state.saveData.coins -= preview.cost;
   if (kind === "equipment") {
     state.saveData.equipmentLevels[id] = preview.nextLevel;
+  } else if (kind === "store") {
+    state.saveData.storeUpgradeLevels[id] = preview.nextLevel;
   } else {
     state.saveData.dishLevels[id] = preview.nextLevel;
   }
   saveGame();
   renderUpgrade();
   return true;
+}
+
+function useCosmeticAction(config, preview) {
+  if (!config || !canUseCosmeticAction(preview)) {
+    return false;
+  }
+
+  if (!preview.isOwned) {
+    state.saveData.coins -= preview.cost;
+    state.saveData.ownedCosmeticIds.push(config.id);
+    state.saveData.ownedCosmeticIds.sort();
+    equipCosmetic(config);
+  } else if (preview.isEquipped) {
+    unequipCosmetic(config);
+  } else {
+    equipCosmetic(config);
+  }
+
+  saveGame();
+  renderUpgrade();
+  renderHome();
+  return true;
+}
+
+function getUpgradeConfig(kind, id) {
+  if (kind === "equipment") {
+    return state.configs.equipmentById.get(id);
+  }
+  if (kind === "store") {
+    return state.configs.storeUpgradeById.get(id);
+  }
+  if (kind === "cosmetic") {
+    return state.configs.cosmeticById.get(id);
+  }
+  return state.configs.dishById.get(id);
+}
+
+function getUpgradePreview(kind, config) {
+  if (kind === "equipment") {
+    return previewEquipment(config);
+  }
+  if (kind === "store") {
+    return previewStoreUpgrade(config);
+  }
+  if (kind === "cosmetic") {
+    return previewCosmetic(config);
+  }
+  return previewDish(config);
 }
 
 function previewEquipment(config) {
@@ -1080,11 +1500,18 @@ function previewEquipment(config) {
   const currentSlotCount = getEquipmentSlotCountAtLevel(config, currentLevel);
   const nextSlotCount = getEquipmentSlotCountAtLevel(config, nextLevel);
   const nextSpeedBonus = getEquipmentSpeedBonus(config, nextLevel);
+  const milestone = getMilestoneAtLevel(config, nextLevel);
   const effectText = !isUnlocked
     ? `第${config.unlockLevel}关解锁`
     : isMaxLevel
       ? "已满级"
-      : `制作时间-${Math.round(nextSpeedBonus * 100)}%${nextSlotCount > currentSlotCount ? `，工位+${nextSlotCount - currentSlotCount}` : ""}`;
+      : [
+          `制作时间-${Math.round(nextSpeedBonus * 100)}%`,
+          nextSlotCount > currentSlotCount ? `工位+${nextSlotCount - currentSlotCount}` : null,
+          milestone?.name,
+        ]
+          .filter(Boolean)
+          .join("，");
 
   return {
     id: config.id,
@@ -1102,24 +1529,32 @@ function previewEquipment(config) {
 }
 
 function previewDish(config) {
-  const currentLevel = getSavedLevel(state.saveData.dishLevels[config.id], DISH_MAX_LEVEL);
+  const maxLevel = getDishMaxLevel(config);
+  const currentLevel = getSavedLevel(state.saveData.dishLevels[config.id], maxLevel);
   const isUnlocked = state.saveData.currentLevelId >= config.unlockLevel;
-  const isMaxLevel = currentLevel >= DISH_MAX_LEVEL;
+  const isMaxLevel = currentLevel >= maxLevel;
   const nextLevel = isMaxLevel ? currentLevel : currentLevel + 1;
   const cost = isUnlocked && !isMaxLevel ? getDishUpgradeCost(config, currentLevel, getCurrentChapter()) : 0;
   const canAfford = isUnlocked && !isMaxLevel && state.saveData.coins >= cost;
+  const currentPrice = getDishPriceAtLevel(config, currentLevel);
   const nextPrice = getDishPriceAtLevel(config, nextLevel);
+  const milestone = getMilestoneAtLevel(config, nextLevel);
   const effectText = !isUnlocked
     ? `第${config.unlockLevel}关解锁`
     : isMaxLevel
       ? "已满级"
-      : `售价+${Math.round(((nextPrice - config.basePrice) / config.basePrice) * 100)}%`;
+      : [
+          `${getDishDisplayName(config, nextLevel)}，售价+${Math.max(0, nextPrice - currentPrice)}`,
+          milestone?.effectText,
+        ]
+          .filter(Boolean)
+          .join("，");
 
   return {
     id: config.id,
     currentLevel,
     nextLevel,
-    maxLevel: DISH_MAX_LEVEL,
+    maxLevel,
     cost,
     canAfford,
     canUpgrade: canAfford,
@@ -1128,6 +1563,181 @@ function previewDish(config) {
     effectText,
     lockedReason: isUnlocked ? undefined : `第${config.unlockLevel}关解锁`,
   };
+}
+
+function previewStoreUpgrade(config) {
+  const currentLevel = getSavedLevel(state.saveData.storeUpgradeLevels[config.id], config.maxLevel);
+  const isUnlocked = state.saveData.currentLevelId >= config.unlockLevel;
+  const isMaxLevel = currentLevel >= config.maxLevel;
+  const nextLevel = isMaxLevel ? currentLevel : currentLevel + 1;
+  const cost = isUnlocked && !isMaxLevel ? getStoreUpgradeCost(config, currentLevel, getCurrentChapter()) : 0;
+  const canAfford = isUnlocked && !isMaxLevel && state.saveData.coins >= cost;
+  const milestone = getMilestoneAtLevel(config, nextLevel);
+  const effectText = !isUnlocked
+    ? `第${config.unlockLevel}关解锁`
+    : isMaxLevel
+      ? "已满级"
+      : [formatEffects(config.effectsPerLevel), milestone?.name].filter(Boolean).join("，");
+
+  return {
+    id: config.id,
+    currentLevel,
+    nextLevel,
+    maxLevel: config.maxLevel,
+    cost,
+    canAfford,
+    canUpgrade: canAfford,
+    isUnlocked,
+    isMaxLevel,
+    effectText,
+    lockedReason: isUnlocked ? undefined : `第${config.unlockLevel}关解锁`,
+  };
+}
+
+function previewCosmetic(config) {
+  const isUnlocked = state.saveData.currentLevelId >= config.unlockLevel;
+  const isOwned = state.saveData.ownedCosmeticIds.includes(config.id);
+  const isEquipped = state.saveData.equippedCosmeticIds[config.slot] === config.id;
+  const canAfford = isUnlocked && !isOwned && state.saveData.coins >= config.cost;
+  return {
+    id: config.id,
+    currentLevel: isOwned ? 1 : 0,
+    nextLevel: 1,
+    maxLevel: 1,
+    cost: isOwned ? 0 : config.cost,
+    canAfford,
+    canUpgrade: canAfford,
+    isUnlocked,
+    isMaxLevel: isOwned,
+    effectText: getCosmeticEffectText(config, isOwned, isEquipped),
+    lockedReason: isUnlocked ? undefined : `第${config.unlockLevel}关解锁`,
+    isOwned,
+    isEquipped,
+    slot: getSlotDisplayName(config.slot),
+  };
+}
+
+function getCosmeticEffectText(config, isOwned, isEquipped) {
+  const setName = config.setId ? state.configs.cosmeticSetById.get(config.setId)?.name : null;
+  const effectText = formatEffects(config.effects);
+  const statusText = isOwned ? (isEquipped ? "已装备" : "已拥有") : effectText;
+  return [statusText, setName ? `套装：${setName}` : null].filter(Boolean).join("，");
+}
+
+function renderAvatarSummary(target) {
+  const avatar = getSelectedAvatar();
+  const equippedCosmetics = getEquippedCosmetics();
+  const activeSets = getActiveCosmeticSets();
+  const outfitText = equippedCosmetics.map((item) => item.name).join(" / ") || "未装备装扮";
+  const setText = activeSets.length > 0 ? `（${activeSets.map((item) => item.name).join(" / ")}）` : "";
+  const image = target === "upgrade" ? dom.upgradeAvatarImage : null;
+  const nameText = target === "upgrade" ? dom.upgradeAvatarText : null;
+  const outfit = target === "upgrade" ? dom.upgradeOutfitText : null;
+
+  if (image) {
+    image.src = toResourceUrl(avatar.previewSpritePath || avatar.portraitPath);
+  }
+  if (nameText) {
+    nameText.textContent = avatar.name;
+  }
+  if (outfit) {
+    outfit.textContent = `${outfitText}${setText}`;
+  }
+}
+
+function getSelectedAvatar() {
+  return (
+    state.configs.avatarById.get(state.saveData.selectedAvatarId) ??
+    state.configs.avatars.find((avatar) => avatar.gender === state.saveData.selectedGender) ??
+    state.configs.avatars[0] ?? {
+      id: "avatar_male_boss",
+      name: "男老板",
+      gender: "male",
+      portraitPath: "placeholders/avatar/male_boss.svg",
+      previewSpritePath: "placeholders/avatar/male_boss.svg",
+    }
+  );
+}
+
+function getEquippedCosmetics() {
+  return Object.values(state.saveData.equippedCosmeticIds)
+    .map((cosmeticId) => state.configs.cosmeticById.get(cosmeticId))
+    .filter((cosmetic) => cosmetic && state.saveData.ownedCosmeticIds.includes(cosmetic.id))
+    .sort((a, b) => getSlotSortIndex(a.slot) - getSlotSortIndex(b.slot));
+}
+
+function getActiveCosmeticSets() {
+  const equippedIds = new Set(getEquippedCosmetics().map((cosmetic) => cosmetic.id));
+  return state.configs.cosmeticSets.filter((cosmeticSet) => {
+    return cosmeticSet.requiredCosmeticIds.every((cosmeticId) => equippedIds.has(cosmeticId));
+  });
+}
+
+function selectAvatarByGender(gender) {
+  state.saveData = loadSave();
+  if (state.saveData.avatarSelectionLocked) {
+    return false;
+  }
+
+  const avatar = state.configs.avatars.find((item) => item.gender === gender);
+  if (!avatar) {
+    return false;
+  }
+
+  state.saveData.selectedAvatarId = avatar.id;
+  state.saveData.selectedGender = avatar.gender;
+  state.saveData.avatarSelectionLocked = true;
+  saveGame();
+  showHome();
+  return true;
+}
+
+function equipCosmeticById(cosmeticId) {
+  const cosmetic = state.configs.cosmeticById.get(cosmeticId);
+  if (!cosmetic) {
+    return false;
+  }
+  state.saveData = loadSave();
+  const didEquip = equipCosmetic(cosmetic);
+  if (didEquip) {
+    saveGame();
+    renderUpgrade();
+    renderHome();
+  }
+  return didEquip;
+}
+
+function unequipCosmeticById(cosmeticId) {
+  const cosmetic = state.configs.cosmeticById.get(cosmeticId);
+  if (!cosmetic) {
+    return false;
+  }
+  state.saveData = loadSave();
+  const didUnequip = unequipCosmetic(cosmetic);
+  if (didUnequip) {
+    saveGame();
+    renderUpgrade();
+    renderHome();
+  }
+  return didUnequip;
+}
+
+function equipCosmetic(config) {
+  if (!state.saveData.ownedCosmeticIds.includes(config.id)) {
+    return false;
+  }
+
+  state.saveData.equippedCosmeticIds[config.slot] = config.id;
+  return true;
+}
+
+function unequipCosmetic(config) {
+  if (state.saveData.equippedCosmeticIds[config.slot] !== config.id) {
+    return false;
+  }
+
+  delete state.saveData.equippedCosmeticIds[config.slot];
+  return true;
 }
 
 function applyLevelResult(result) {
@@ -1166,7 +1776,7 @@ function addRewardCoins(amount) {
 }
 
 function loadSave() {
-  const raw = localStorage.getItem(SAVE_KEY);
+  const raw = [SAVE_KEY, ...LEGACY_SAVE_KEYS].map((key) => localStorage.getItem(key)).find((item) => item !== null);
   if (!raw) {
     return cloneDefaultSaveData();
   }
@@ -1180,11 +1790,16 @@ function loadSave() {
 }
 
 function saveGame() {
-  localStorage.setItem(SAVE_KEY, JSON.stringify(mergeSaveData(state.saveData)));
+  const merged = mergeSaveData(state.saveData);
+  merged.cloudSync.revision += 1;
+  localStorage.setItem(SAVE_KEY, JSON.stringify(merged));
 }
 
 function clearSaveAndRefresh() {
   localStorage.removeItem(SAVE_KEY);
+  for (const legacyKey of LEGACY_SAVE_KEYS) {
+    localStorage.removeItem(legacyKey);
+  }
   state.saveData = loadSave();
   state.phase = "idle";
   state.lastResult = null;
@@ -1195,9 +1810,15 @@ function clearSaveAndRefresh() {
 function mergeSaveData(rawParsed) {
   const defaults = cloneDefaultSaveData();
   const parsed = rawParsed && typeof rawParsed === "object" ? rawParsed : {};
+  const selectedAvatarId = normalizeAvatarId(parsed.selectedAvatarId, parsed.selectedGender);
   return {
     ...defaults,
     ...parsed,
+    schemaVersion: 3,
+    playerId: typeof parsed.playerId === "string" ? parsed.playerId : defaults.playerId,
+    selectedAvatarId,
+    selectedGender: inferGenderFromAvatarId(selectedAvatarId, normalizeGender(parsed.selectedGender, defaults.selectedGender)),
+    avatarSelectionLocked: parsed.avatarSelectionLocked === true,
     currentLevelId: normalizePositiveInteger(parsed.currentLevelId, defaults.currentLevelId),
     coins: normalizeCoins(parsed.coins, defaults.coins),
     completedLevels: normalizeLevelIds(parsed.completedLevels),
@@ -1210,15 +1831,32 @@ function mergeSaveData(rawParsed) {
       ...defaults.dishLevels,
       ...normalizeLevelMap(parsed.dishLevels),
     },
+    storeUpgradeLevels: {
+      ...defaults.storeUpgradeLevels,
+      ...normalizeLevelMap(parsed.storeUpgradeLevels),
+    },
+    ownedCosmeticIds: normalizeStringIds(parsed.ownedCosmeticIds),
+    equippedCosmeticIds: normalizeEquippedCosmetics(parsed.equippedCosmeticIds),
     adState: {
-      settlementDoubleWatchedByLevel: {
-        ...defaults.adState.settlementDoubleWatchedByLevel,
-        ...normalizeBooleanMap(parsed.adState?.settlementDoubleWatchedByLevel),
+      settlementBonusWatchedByLevel: {
+        ...defaults.adState.settlementBonusWatchedByLevel,
+        ...normalizeBooleanMap(parsed.adState?.settlementBonusWatchedByLevel ?? parsed.adState?.settlementDoubleWatchedByLevel),
       },
       failExtendWatchedByLevel: {
         ...defaults.adState.failExtendWatchedByLevel,
         ...normalizeBooleanMap(parsed.adState?.failExtendWatchedByLevel),
       },
+      dailyRewardWatchedByDate: {
+        ...defaults.adState.dailyRewardWatchedByDate,
+        ...normalizeBooleanMap(parsed.adState?.dailyRewardWatchedByDate),
+      },
+    },
+    cloudSync: {
+      revision: normalizePositiveInteger(parsed.cloudSync?.revision, defaults.cloudSync.revision + 1) - 1,
+      lastSyncedAt: typeof parsed.cloudSync?.lastSyncedAt === "string" ? parsed.cloudSync.lastSyncedAt : "",
+      lastSyncStatus: ["idle", "pending", "synced", "failed"].includes(parsed.cloudSync?.lastSyncStatus)
+        ? parsed.cloudSync.lastSyncStatus
+        : "idle",
     },
   };
 }
@@ -1231,6 +1869,28 @@ function normalizePositiveInteger(value, fallback) {
   return typeof value === "number" && Number.isFinite(value) ? Math.max(1, Math.floor(value)) : fallback;
 }
 
+function normalizeGender(value, fallback) {
+  return value === "male" || value === "female" ? value : fallback;
+}
+
+function normalizeAvatarId(value, gender) {
+  if (value === "avatar_male_boss" || value === "avatar_female_boss") {
+    return value;
+  }
+
+  return normalizeGender(gender, "male") === "female" ? "avatar_female_boss" : "avatar_male_boss";
+}
+
+function inferGenderFromAvatarId(value, fallback) {
+  if (value === "avatar_female_boss") {
+    return "female";
+  }
+  if (value === "avatar_male_boss") {
+    return "male";
+  }
+  return fallback;
+}
+
 function normalizeCoins(value, fallback) {
   return typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : fallback;
 }
@@ -1241,6 +1901,14 @@ function normalizeLevelIds(value) {
   }
 
   return [...new Set(value.filter((item) => Number.isInteger(item) && item > 0))].sort((a, b) => a - b);
+}
+
+function normalizeStringIds(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return [...new Set(value.filter((item) => typeof item === "string" && item.length > 0))].sort();
 }
 
 function normalizeLevelMap(value) {
@@ -1286,6 +1954,21 @@ function normalizeBooleanMap(value) {
   return normalized;
 }
 
+function normalizeEquippedCosmetics(value) {
+  const normalized = {};
+  if (!value || typeof value !== "object") {
+    return normalized;
+  }
+
+  const allowedSlots = new Set(["hair", "hat", "apron", "shoes", "gloves", "clothes", "tool"]);
+  for (const [slot, itemId] of Object.entries(value)) {
+    if (allowedSlots.has(slot) && typeof itemId === "string" && itemId.length > 0) {
+      normalized[slot] = itemId;
+    }
+  }
+  return normalized;
+}
+
 function getPlayableLevelId() {
   state.saveData = loadSave();
   if (state.configs.levelById.has(state.saveData.currentLevelId) && state.saveData.currentLevelId <= MVP_LEVEL_LIMIT) {
@@ -1310,20 +1993,228 @@ function getCurrentChapter() {
   return currentLevel?.chapter ?? 1;
 }
 
-function getDishPrice(dish) {
-  const dishLevel = state.saveData.dishLevels[dish.id] ?? 1;
-  return getDishPriceAtLevel(dish, dishLevel);
+function getLocalDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-function getDishPriceAtLevel(dish, level) {
-  const priceBonus = 1 + Math.max(0, level - 1) * DISH_PRICE_BONUS_PER_LEVEL;
-  return Math.round(dish.basePrice * priceBonus);
+function getTotalEconomyEffects() {
+  const total = {};
+  const equippedOwnedCosmeticIds = new Set();
+  for (const storeUpgrade of state.configs.storeUpgrades) {
+    const level = getSavedLevel(state.saveData.storeUpgradeLevels[storeUpgrade.id], storeUpgrade.maxLevel);
+    addEffects(total, scaleEffects(storeUpgrade.effectsPerLevel, Math.max(0, level - 1)));
+    addEffects(total, getMilestoneEffects(storeUpgrade, level));
+  }
+
+  for (const cosmeticId of Object.values(state.saveData.equippedCosmeticIds)) {
+    const cosmetic = state.configs.cosmeticById.get(cosmeticId);
+    if (cosmetic && state.saveData.ownedCosmeticIds.includes(cosmetic.id)) {
+      equippedOwnedCosmeticIds.add(cosmetic.id);
+      addEffects(total, cosmetic.effects);
+    }
+  }
+
+  for (const cosmeticSet of state.configs.cosmeticSets) {
+    if (cosmeticSet.requiredCosmeticIds.every((cosmeticId) => equippedOwnedCosmeticIds.has(cosmeticId))) {
+      addEffects(total, cosmeticSet.effects);
+    }
+  }
+
+  return total;
+}
+
+function calculateCustomerRewardBreakdown(customerConfig, orderDishIds, patienceRatio, combo) {
+  const effects = getTotalEconomyEffects();
+  const grossSales = orderDishIds.reduce((sum, dishId) => {
+    const dish = state.configs.dishById.get(dishId);
+    return sum + (dish ? getDishPriceAtLevel(dish, state.saveData.dishLevels[dish.id] ?? 1, effects) : 0);
+  }, 0);
+  const ingredientCost = orderDishIds.reduce((sum, dishId) => {
+    const dish = state.configs.dishById.get(dishId);
+    return sum + (dish ? getDishIngredientCostAtLevel(dish, state.saveData.dishLevels[dish.id] ?? 1, effects) : 0);
+  }, 0);
+  const quickTipRate = Math.min(1, Math.max(0, patienceRatio)) * MAX_QUICK_TIP_BONUS;
+  const comboTipRate = Math.min(MAX_COMBO_TIP_BONUS, Math.max(0, combo) * COMBO_TIP_BONUS_PER_STEP);
+  const levelRewardMultiplier = state.level.modifiers.rewardMultiplier ?? 1;
+  const tips = Math.round(grossSales * (quickTipRate + comboTipRate + (effects.tipBonus ?? 0)) * customerConfig.tipMultiplier * levelRewardMultiplier);
+  const adjustedSales = grossSales * customerConfig.tipMultiplier * levelRewardMultiplier;
+  const serviceBonus = SERVICE_COIN_BONUS + Math.floor(Math.max(0, effects.rating ?? 0) * 0.5);
+  const netCoins = Math.max(1, Math.round(adjustedSales + tips + serviceBonus - ingredientCost));
+
+  return {
+    grossSales: Math.round(adjustedSales),
+    tips,
+    serviceBonus,
+    ingredientCost,
+    netCoins,
+  };
+}
+
+function getCustomerPatienceSec(customerConfig) {
+  const effects = getTotalEconomyEffects();
+  const patienceBonus = Math.min(0.6, Math.max(0, effects.patienceBonus ?? 0));
+  return customerConfig.basePatience * (state.level.modifiers.patienceMultiplier ?? 1) * (1 + patienceBonus);
+}
+
+function calculateAngryLeavePenalty() {
+  const effects = getTotalEconomyEffects();
+  const complaintReduce = Math.min(0.8, Math.max(0, effects.complaintReduce ?? 0));
+  return Math.max(0, Math.round(4 * (1 - complaintReduce)));
+}
+
+function calculateWrongServePenalty() {
+  const effects = getTotalEconomyEffects();
+  const complaintReduce = Math.min(0.8, Math.max(0, effects.complaintReduce ?? 0));
+  return Math.max(0, Math.round(2 * (1 - complaintReduce)));
+}
+
+function calculateSettlementAdBonus(level, baseRewardCoins) {
+  if (baseRewardCoins <= 0) {
+    return 0;
+  }
+
+  return Math.max(10, Math.floor(Math.min(baseRewardCoins * SETTLEMENT_AD_BONUS_RATE, level.goals.coin1 * SETTLEMENT_AD_GOAL_CAP_RATE) / 10) * 10);
+}
+
+function getMilestoneAtLevel(config, level) {
+  return config.upgradeMilestones?.find((milestone) => milestone.level === level) ?? null;
+}
+
+function getMilestoneEffects(config, level) {
+  const total = {};
+  for (const milestone of config.upgradeMilestones ?? []) {
+    if (level >= milestone.level) {
+      addEffects(total, milestone.effects);
+    }
+  }
+  return total;
+}
+
+function scaleEffects(effects, scale) {
+  if (!effects || scale <= 0) {
+    return {};
+  }
+
+  return {
+    priceBonus: (effects.priceBonus ?? 0) * scale,
+    speedBonus: (effects.speedBonus ?? 0) * scale,
+    costReduce: (effects.costReduce ?? 0) * scale,
+    patienceBonus: (effects.patienceBonus ?? 0) * scale,
+    complaintReduce: (effects.complaintReduce ?? 0) * scale,
+    rating: (effects.rating ?? 0) * scale,
+    tipBonus: (effects.tipBonus ?? 0) * scale,
+  };
+}
+
+function addEffects(target, source) {
+  if (!source) {
+    return;
+  }
+
+  target.priceBonus = (target.priceBonus ?? 0) + (source.priceBonus ?? 0);
+  target.speedBonus = (target.speedBonus ?? 0) + (source.speedBonus ?? 0);
+  target.costReduce = (target.costReduce ?? 0) + (source.costReduce ?? 0);
+  target.patienceBonus = (target.patienceBonus ?? 0) + (source.patienceBonus ?? 0);
+  target.complaintReduce = (target.complaintReduce ?? 0) + (source.complaintReduce ?? 0);
+  target.rating = (target.rating ?? 0) + (source.rating ?? 0);
+  target.tipBonus = (target.tipBonus ?? 0) + (source.tipBonus ?? 0);
+}
+
+function formatEffects(effects) {
+  const parts = [];
+  if (effects.priceBonus) {
+    parts.push(`售价+${Math.round(effects.priceBonus * 100)}%`);
+  }
+  if (effects.speedBonus) {
+    parts.push(`制作速度+${Math.round(effects.speedBonus * 100)}%`);
+  }
+  if (effects.costReduce) {
+    parts.push(`食材成本-${Math.round(effects.costReduce * 100)}%`);
+  }
+  if (effects.patienceBonus) {
+    parts.push(`顾客耐心+${Math.round(effects.patienceBonus * 100)}%`);
+  }
+  if (effects.complaintReduce) {
+    parts.push(`客诉惩罚-${Math.round(effects.complaintReduce * 100)}%`);
+  }
+  if (effects.rating) {
+    parts.push(`口碑+${effects.rating}`);
+  }
+  if (effects.tipBonus) {
+    parts.push(`小费+${Math.round(effects.tipBonus * 100)}%`);
+  }
+  return parts.join("，") || "外观升级";
+}
+
+function getSlotDisplayName(slot) {
+  const names = {
+    hair: "发型",
+    hat: "帽子",
+    clothes: "衣服",
+    apron: "围裙",
+    shoes: "鞋子",
+    gloves: "手套",
+    tool: "工具",
+  };
+  return names[slot] ?? slot;
+}
+
+function getSlotSortIndex(slot) {
+  return ["hair", "hat", "clothes", "apron", "shoes", "gloves", "tool"].indexOf(slot);
+}
+
+function toResourceUrl(resourcePath) {
+  if (!resourcePath) {
+    return "";
+  }
+
+  if (/^(https?:)?\/\//.test(resourcePath) || resourcePath.startsWith("data:")) {
+    return resourcePath;
+  }
+
+  return `../assets/resources/${resourcePath}`;
+}
+
+function getDishPrice(dish) {
+  const dishLevel = state.saveData.dishLevels[dish.id] ?? 1;
+  return getDishPriceAtLevel(dish, dishLevel, getTotalEconomyEffects());
+}
+
+function getDishPriceAtLevel(dish, level, effects = {}) {
+  const safeLevel = getSavedLevel(level, getDishMaxLevel(dish));
+  const perLevelBonus = dish.priceBonusPerLevel ?? DEFAULT_DISH_PRICE_BONUS_PER_LEVEL;
+  const milestoneBonus = getMilestoneEffects(dish, safeLevel).priceBonus ?? 0;
+  const totalBonus = Math.max(0, (safeLevel - 1) * perLevelBonus + milestoneBonus + (effects.priceBonus ?? 0));
+  return Math.max(1, Math.round(dish.basePrice * (1 + totalBonus)));
+}
+
+function getDishIngredientCostAtLevel(dish, level, effects = {}) {
+  const safeLevel = getSavedLevel(level, getDishMaxLevel(dish));
+  const costReduce = Math.min(0.75, Math.max(0, effects.costReduce ?? 0));
+  const baseCost = dish.basePrice * (dish.ingredientCostRate ?? DEFAULT_INGREDIENT_COST_RATE);
+  return Math.max(1, Math.round(baseCost * (1 + Math.max(0, safeLevel - 1) * 0.012) * (1 - costReduce)));
+}
+
+function getDishDisplayName(dish, level) {
+  const milestone = [...(dish.upgradeMilestones ?? [])]
+    .filter((item) => item.level <= level)
+    .sort((a, b) => b.level - a.level)[0];
+  return milestone?.name ?? dish.name;
+}
+
+function getDishMaxLevel(dish) {
+  return Math.max(1, Math.floor(dish.maxLevel ?? DEFAULT_DISH_MAX_LEVEL));
 }
 
 function getCookDurationSec(dish) {
   const equipment = state.configs.equipmentById.get(dish.stationId);
+  const effects = getTotalEconomyEffects();
   const equipmentLevel = equipment ? state.saveData.equipmentLevels[equipment.id] ?? 1 : 1;
-  const speedBonus = equipment ? getEquipmentSpeedBonus(equipment, equipmentLevel) : 0;
+  const speedBonus = Math.min(0.75, (equipment ? getEquipmentSpeedBonus(equipment, equipmentLevel) : 0) + (effects.speedBonus ?? 0));
   return Math.max(0.5, dish.baseCookTime * (1 - speedBonus));
 }
 
@@ -1333,15 +2224,27 @@ function getEquipmentSlotCount(equipment) {
 }
 
 function getEquipmentSlotCountAtLevel(equipment, level) {
+  if (Array.isArray(equipment.slotUnlockLevels) && equipment.slotUnlockLevels.length > 0) {
+    const extraSlots = equipment.slotUnlockLevels.filter((unlockLevel) => level >= unlockLevel).length;
+    return Math.min(equipment.slotCountMax, equipment.slotCountBase + extraSlots);
+  }
+
   const extraSlots = Math.floor(Math.max(0, level - 1) / EQUIPMENT_SLOT_LEVEL_STEP);
   return Math.min(equipment.slotCountMax, equipment.slotCountBase + extraSlots);
 }
 
 function getEquipmentSpeedBonus(config, level) {
-  return Math.min(config.maxSpeedBonus, Math.max(0, level - 1) * config.speedBonusPerLevel);
+  const baseBonus = Math.max(0, level - 1) * config.speedBonusPerLevel;
+  const perLevelBonus = scaleEffects(config.effectsPerLevel, Math.max(0, level - 1)).speedBonus ?? 0;
+  const milestoneBonus = getMilestoneEffects(config, level).speedBonus ?? 0;
+  return Math.min(config.maxSpeedBonus + 0.12, Math.max(0, baseBonus + perLevelBonus + milestoneBonus));
 }
 
 function getEquipmentMaxLevel(config) {
+  if (config.maxLevel && config.maxLevel > 0) {
+    return Math.floor(config.maxLevel);
+  }
+
   const speedSteps = config.speedBonusPerLevel > 0 ? Math.ceil(config.maxSpeedBonus / config.speedBonusPerLevel) : 0;
   const slotSteps = Math.max(0, config.slotCountMax - config.slotCountBase) * EQUIPMENT_SLOT_LEVEL_STEP;
   return 1 + Math.max(speedSteps, slotSteps);
@@ -1356,12 +2259,17 @@ function getSavedLevel(value, maxLevel) {
 }
 
 function getEquipmentUpgradeCost(config, level, chapter) {
-  const raw = config.baseUpgradeCost * Math.pow(level, 1.65) * (1 + 0.35 * (chapter - 1));
+  const raw = config.baseUpgradeCost * Math.pow(level, 1.52) * (1 + 0.28 * (chapter - 1));
   return roundTo10(raw);
 }
 
 function getDishUpgradeCost(config, level, chapter) {
-  const raw = config.baseUpgradeCost * Math.pow(level, 1.55) * (1 + 0.25 * (chapter - 1));
+  const raw = config.baseUpgradeCost * Math.pow(level, 1.42) * (1 + 0.2 * (chapter - 1));
+  return roundTo10(raw);
+}
+
+function getStoreUpgradeCost(config, level, chapter) {
+  const raw = config.baseUpgradeCost * Math.pow(level, 1.48) * (1 + 0.22 * (chapter - 1));
   return roundTo10(raw);
 }
 

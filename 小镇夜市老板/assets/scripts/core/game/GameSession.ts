@@ -1,4 +1,5 @@
 import { LevelConfig, LevelId } from '../config/types';
+import { EconomySystem } from '../../systems/EconomySystem';
 
 export type LevelOutcome = 'success' | 'fail';
 
@@ -8,13 +9,14 @@ export interface LevelResult {
   earnedCoins: number;
   baseRewardCoins: number;
   finalRewardCoins: number;
+  settlementAdBonusCoins: number;
   servedCustomers: number;
   maxCombo: number;
   angryLeaveCount: number;
   wrongServeCount: number;
   stars: number;
   rewardClaimed: boolean;
-  canWatchDoubleRewardAd: boolean;
+  canWatchSettlementBonusAd: boolean;
   canWatchExtendTimeAd: boolean;
 }
 
@@ -47,6 +49,8 @@ export function calculateStars(level: LevelConfig, earnedCoins: number): number 
 export function buildLevelResult(options: BuildLevelResultOptions): LevelResult {
   const stars = options.outcome === 'success' ? calculateStars(options.level, options.earnedCoins) : 0;
   const baseRewardCoins = Math.max(0, options.earnedCoins);
+  const settlementAdBonusCoins =
+    options.outcome === 'success' ? EconomySystem.calculateSettlementAdBonus(options.level, baseRewardCoins) : 0;
 
   return {
     levelId: options.level.id,
@@ -54,13 +58,14 @@ export function buildLevelResult(options: BuildLevelResultOptions): LevelResult 
     earnedCoins: options.earnedCoins,
     baseRewardCoins,
     finalRewardCoins: baseRewardCoins,
+    settlementAdBonusCoins,
     servedCustomers: options.servedCustomers,
     maxCombo: options.maxCombo,
     angryLeaveCount: options.angryLeaveCount ?? 0,
     wrongServeCount: options.wrongServeCount ?? 0,
     stars,
     rewardClaimed: false,
-    canWatchDoubleRewardAd: options.outcome === 'success' && baseRewardCoins > 0,
+    canWatchSettlementBonusAd: options.outcome === 'success' && settlementAdBonusCoins > 0,
     canWatchExtendTimeAd: options.outcome === 'fail',
   };
 }

@@ -16,6 +16,38 @@
     "tags": [
       "chapter_1",
       "mvp"
+    ],
+    "ingredientCostRate": 0.28,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "加蛋烤冷面",
+        "effectText": "产品升级，售价+8%，小费+2%",
+        "effects": {
+          "priceBonus": 0.08,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌烤冷面",
+        "effectText": "招牌口味，售价再+12%，口碑+1",
+        "effects": {
+          "priceBonus": 0.12,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "夜市霸王冷面",
+        "effectText": "大份招牌，售价再+18%，小费+3%",
+        "effects": {
+          "priceBonus": 0.18,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -35,6 +67,47 @@
     "tags": [
       "chapter_1",
       "mvp"
+    ],
+    "ingredientCostRate": 0.24,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "鸭屎香柠檬水",
+        "effectText": "茶香升级，售价+12%，小费+2%",
+        "effects": {
+          "priceBonus": 0.12,
+          "tipBonus": 0.02
+        },
+        "unlocks": [
+          "drink_yashixiang_lemonade"
+        ]
+      },
+      {
+        "level": 10,
+        "name": "霸王柠檬水",
+        "effectText": "大杯爆款，售价再+16%，顾客满意+3%",
+        "effects": {
+          "priceBonus": 0.16,
+          "tipBonus": 0.03
+        },
+        "unlocks": [
+          "drink_king_lemonade"
+        ]
+      },
+      {
+        "level": 15,
+        "name": "招牌桶装柠檬水",
+        "effectText": "桶装分享，售价再+20%，口碑+1",
+        "effects": {
+          "priceBonus": 0.2,
+          "rating": 1
+        },
+        "unlocks": [
+          "drink_bucket_lemonade"
+        ]
+      }
     ]
   },
   {
@@ -54,6 +127,38 @@
     "tags": [
       "chapter_1",
       "mvp"
+    ],
+    "ingredientCostRate": 0.3,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "火腿鸡蛋炒饭",
+        "effectText": "加料升级，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "锅气黄金炒饭",
+        "effectText": "锅气提升，售价再+14%，口碑+1",
+        "effects": {
+          "priceBonus": 0.14,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "招牌夜市炒饭",
+        "effectText": "招牌主食，售价再+18%，小费+3%",
+        "effects": {
+          "priceBonus": 0.18,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -73,6 +178,38 @@
     "tags": [
       "chapter_1",
       "front30"
+    ],
+    "ingredientCostRate": 0.34,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "爆汁炸鸡排",
+        "effectText": "爆汁配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "芝士炸鸡排",
+        "effectText": "高价配料，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王炸鸡排",
+        "effectText": "大份招牌，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -92,6 +229,38 @@
     "tags": [
       "chapter_1",
       "front30"
+    ],
+    "ingredientCostRate": 0.28,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "珍珠奶茶",
+        "effectText": "加珍珠，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "厚乳奶茶",
+        "effectText": "厚乳升级，售价再+16%，顾客满意+3%",
+        "effects": {
+          "priceBonus": 0.16,
+          "tipBonus": 0.03
+        }
+      },
+      {
+        "level": 15,
+        "name": "招牌桶装奶茶",
+        "effectText": "桶装爆款，售价再+20%，口碑+1",
+        "effects": {
+          "priceBonus": 0.2,
+          "rating": 1
+        }
+      }
     ]
   },
   {
@@ -111,6 +280,38 @@
     "tags": [
       "chapter_2",
       "front30"
+    ],
+    "ingredientCostRate": 0.32,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "芝士热狗",
+        "effectText": "芝士加料，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "双肠热狗",
+        "effectText": "双肠大份，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "夜市霸王热狗",
+        "effectText": "高客单招牌，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -129,6 +330,38 @@
     "baseUpgradeCost": 220,
     "tags": [
       "chapter_2"
+    ],
+    "ingredientCostRate": 0.34,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -147,6 +380,38 @@
     "baseUpgradeCost": 250,
     "tags": [
       "chapter_3"
+    ],
+    "ingredientCostRate": 0.31,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -165,6 +430,38 @@
     "baseUpgradeCost": 270,
     "tags": [
       "chapter_3"
+    ],
+    "ingredientCostRate": 0.3,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -183,6 +480,38 @@
     "baseUpgradeCost": 230,
     "tags": [
       "chapter_4"
+    ],
+    "ingredientCostRate": 0.26,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -201,6 +530,38 @@
     "baseUpgradeCost": 340,
     "tags": [
       "chapter_4"
+    ],
+    "ingredientCostRate": 0.36,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -219,6 +580,38 @@
     "baseUpgradeCost": 400,
     "tags": [
       "chapter_5"
+    ],
+    "ingredientCostRate": 0.38,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   }
 ]

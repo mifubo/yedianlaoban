@@ -1,9 +1,13 @@
 import {
   ConfigBundle,
+  CosmeticItemConfig,
+  CosmeticSetConfig,
   CustomerConfig,
   DishConfig,
   EquipmentConfig,
   LevelConfig,
+  PlayerAvatarConfig,
+  StoreUpgradeConfig,
 } from './types';
 
 export const mvpDishConfigs: DishConfig[] = [
@@ -24,6 +28,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "tags": [
       "chapter_1",
       "mvp"
+    ],
+    "ingredientCostRate": 0.28,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "加蛋烤冷面",
+        "effectText": "产品升级，售价+8%，小费+2%",
+        "effects": {
+          "priceBonus": 0.08,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌烤冷面",
+        "effectText": "招牌口味，售价再+12%，口碑+1",
+        "effects": {
+          "priceBonus": 0.12,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "夜市霸王冷面",
+        "effectText": "大份招牌，售价再+18%，小费+3%",
+        "effects": {
+          "priceBonus": 0.18,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -43,6 +79,47 @@ export const mvpDishConfigs: DishConfig[] = [
     "tags": [
       "chapter_1",
       "mvp"
+    ],
+    "ingredientCostRate": 0.24,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "鸭屎香柠檬水",
+        "effectText": "茶香升级，售价+12%，小费+2%",
+        "effects": {
+          "priceBonus": 0.12,
+          "tipBonus": 0.02
+        },
+        "unlocks": [
+          "drink_yashixiang_lemonade"
+        ]
+      },
+      {
+        "level": 10,
+        "name": "霸王柠檬水",
+        "effectText": "大杯爆款，售价再+16%，顾客满意+3%",
+        "effects": {
+          "priceBonus": 0.16,
+          "tipBonus": 0.03
+        },
+        "unlocks": [
+          "drink_king_lemonade"
+        ]
+      },
+      {
+        "level": 15,
+        "name": "招牌桶装柠檬水",
+        "effectText": "桶装分享，售价再+20%，口碑+1",
+        "effects": {
+          "priceBonus": 0.2,
+          "rating": 1
+        },
+        "unlocks": [
+          "drink_bucket_lemonade"
+        ]
+      }
     ]
   },
   {
@@ -62,6 +139,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "tags": [
       "chapter_1",
       "mvp"
+    ],
+    "ingredientCostRate": 0.3,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "火腿鸡蛋炒饭",
+        "effectText": "加料升级，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "锅气黄金炒饭",
+        "effectText": "锅气提升，售价再+14%，口碑+1",
+        "effects": {
+          "priceBonus": 0.14,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "招牌夜市炒饭",
+        "effectText": "招牌主食，售价再+18%，小费+3%",
+        "effects": {
+          "priceBonus": 0.18,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -81,6 +190,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "tags": [
       "chapter_1",
       "front30"
+    ],
+    "ingredientCostRate": 0.34,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "爆汁炸鸡排",
+        "effectText": "爆汁配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "芝士炸鸡排",
+        "effectText": "高价配料，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王炸鸡排",
+        "effectText": "大份招牌，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -100,6 +241,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "tags": [
       "chapter_1",
       "front30"
+    ],
+    "ingredientCostRate": 0.28,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "珍珠奶茶",
+        "effectText": "加珍珠，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "厚乳奶茶",
+        "effectText": "厚乳升级，售价再+16%，顾客满意+3%",
+        "effects": {
+          "priceBonus": 0.16,
+          "tipBonus": 0.03
+        }
+      },
+      {
+        "level": 15,
+        "name": "招牌桶装奶茶",
+        "effectText": "桶装爆款，售价再+20%，口碑+1",
+        "effects": {
+          "priceBonus": 0.2,
+          "rating": 1
+        }
+      }
     ]
   },
   {
@@ -119,6 +292,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "tags": [
       "chapter_2",
       "front30"
+    ],
+    "ingredientCostRate": 0.32,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "芝士热狗",
+        "effectText": "芝士加料，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "双肠热狗",
+        "effectText": "双肠大份，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "夜市霸王热狗",
+        "effectText": "高客单招牌，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -137,6 +342,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "baseUpgradeCost": 220,
     "tags": [
       "chapter_2"
+    ],
+    "ingredientCostRate": 0.34,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -155,6 +392,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "baseUpgradeCost": 250,
     "tags": [
       "chapter_3"
+    ],
+    "ingredientCostRate": 0.31,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -173,6 +442,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "baseUpgradeCost": 270,
     "tags": [
       "chapter_3"
+    ],
+    "ingredientCostRate": 0.3,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -191,6 +492,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "baseUpgradeCost": 230,
     "tags": [
       "chapter_4"
+    ],
+    "ingredientCostRate": 0.26,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -209,6 +542,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "baseUpgradeCost": 340,
     "tags": [
       "chapter_4"
+    ],
+    "ingredientCostRate": 0.36,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   },
   {
@@ -227,6 +592,38 @@ export const mvpDishConfigs: DishConfig[] = [
     "baseUpgradeCost": 400,
     "tags": [
       "chapter_5"
+    ],
+    "ingredientCostRate": 0.38,
+    "maxLevel": 15,
+    "priceBonusPerLevel": 0.05,
+    "upgradeMilestones": [
+      {
+        "level": 5,
+        "name": "进阶口味",
+        "effectText": "进阶配方，售价+10%，小费+2%",
+        "effects": {
+          "priceBonus": 0.1,
+          "tipBonus": 0.02
+        }
+      },
+      {
+        "level": 10,
+        "name": "招牌口味",
+        "effectText": "招牌升级，售价再+15%，口碑+1",
+        "effects": {
+          "priceBonus": 0.15,
+          "rating": 1
+        }
+      },
+      {
+        "level": 15,
+        "name": "霸王口味",
+        "effectText": "高客单升级，售价再+20%，小费+3%",
+        "effects": {
+          "priceBonus": 0.2,
+          "tipBonus": 0.03
+        }
+      }
     ]
   }
 ];
@@ -342,11 +739,43 @@ export const mvpEquipmentConfigs: EquipmentConfig[] = [
     "slotCountBase": 1,
     "slotCountMax": 3,
     "baseUpgradeCost": 120,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "mvp",
       "hot_surface"
+    ],
+    "maxLevel": 12,
+    "slotUnlockLevels": [
+      3,
+      7
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "双面铁板",
+        "effectText": "解锁第2工位，烤冷面高峰不堵单",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 7,
+        "name": "宽面铁板",
+        "effectText": "解锁第3工位，支持多份并行",
+        "effects": {
+          "speedBonus": 0.03
+        }
+      },
+      {
+        "level": 10,
+        "name": "明火铁板",
+        "effectText": "铁板类制作速度再+6%，口碑+1",
+        "effects": {
+          "speedBonus": 0.06,
+          "rating": 1
+        }
+      }
     ]
   },
   {
@@ -356,11 +785,56 @@ export const mvpEquipmentConfigs: EquipmentConfig[] = [
     "slotCountBase": 1,
     "slotCountMax": 3,
     "baseUpgradeCost": 100,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "mvp",
       "drink"
+    ],
+    "maxLevel": 12,
+    "slotUnlockLevels": [
+      3,
+      7
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "双杯饮品台",
+        "effectText": "同时排队2杯饮品",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 5,
+        "name": "茶香萃取器",
+        "effectText": "支撑鸭屎香柠檬水，饮品小费+2%",
+        "effects": {
+          "tipBonus": 0.02
+        },
+        "unlocks": [
+          "drink_yashixiang_lemonade"
+        ]
+      },
+      {
+        "level": 7,
+        "name": "三杯饮品台",
+        "effectText": "同时排队3杯饮品",
+        "effects": {
+          "speedBonus": 0.03
+        }
+      },
+      {
+        "level": 10,
+        "name": "霸王杯封口机",
+        "effectText": "支撑霸王饮品，制作速度再+6%",
+        "effects": {
+          "speedBonus": 0.06
+        },
+        "unlocks": [
+          "drink_king_series"
+        ]
+      }
     ]
   },
   {
@@ -370,10 +844,42 @@ export const mvpEquipmentConfigs: EquipmentConfig[] = [
     "slotCountBase": 1,
     "slotCountMax": 3,
     "baseUpgradeCost": 150,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "main_food"
+    ],
+    "maxLevel": 12,
+    "slotUnlockLevels": [
+      3,
+      7
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "双灶炒锅",
+        "effectText": "解锁第2工位，主食高峰更稳",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 7,
+        "name": "猛火双灶",
+        "effectText": "解锁第3工位，炒饭产能提升",
+        "effects": {
+          "speedBonus": 0.03
+        }
+      },
+      {
+        "level": 10,
+        "name": "锅气猛火灶",
+        "effectText": "炒锅制作速度再+6%，小费+2%",
+        "effects": {
+          "speedBonus": 0.06,
+          "tipBonus": 0.02
+        }
+      }
     ]
   },
   {
@@ -383,10 +889,42 @@ export const mvpEquipmentConfigs: EquipmentConfig[] = [
     "slotCountBase": 1,
     "slotCountMax": 3,
     "baseUpgradeCost": 180,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "fried"
+    ],
+    "maxLevel": 12,
+    "slotUnlockLevels": [
+      3,
+      7
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "双篮油锅",
+        "effectText": "解锁第2工位，炸鸡排不压单",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 7,
+        "name": "控温油锅",
+        "effectText": "解锁第3工位，减少炸制等待",
+        "effects": {
+          "speedBonus": 0.03
+        }
+      },
+      {
+        "level": 10,
+        "name": "酥脆油锅",
+        "effectText": "油炸制作速度再+6%，小费+2%",
+        "effects": {
+          "speedBonus": 0.06,
+          "tipBonus": 0.02
+        }
+      }
     ]
   },
   {
@@ -396,10 +934,42 @@ export const mvpEquipmentConfigs: EquipmentConfig[] = [
     "slotCountBase": 1,
     "slotCountMax": 3,
     "baseUpgradeCost": 220,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "grill"
+    ],
+    "maxLevel": 12,
+    "slotUnlockLevels": [
+      3,
+      7
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "双排烤炉",
+        "effectText": "解锁第2工位，热狗放学潮更稳",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 7,
+        "name": "三排烤炉",
+        "effectText": "解锁第3工位，高峰可并行",
+        "effects": {
+          "speedBonus": 0.03
+        }
+      },
+      {
+        "level": 10,
+        "name": "炭香烤炉",
+        "effectText": "烧烤制作速度再+6%，口碑+1",
+        "effects": {
+          "speedBonus": 0.06,
+          "rating": 1
+        }
+      }
     ]
   },
   {
@@ -409,10 +979,446 @@ export const mvpEquipmentConfigs: EquipmentConfig[] = [
     "slotCountBase": 1,
     "slotCountMax": 2,
     "baseUpgradeCost": 320,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "specialty"
+    ],
+    "maxLevel": 10,
+    "slotUnlockLevels": [
+      4
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 4,
+        "name": "丸子炉扩容",
+        "effectText": "解锁额外工位，减少高峰堵单",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 8,
+        "name": "丸子炉强化",
+        "effectText": "制作速度再+5%",
+        "effects": {
+          "speedBonus": 0.05
+        }
+      }
+    ]
+  }
+];
+
+export const mvpStoreUpgradeConfigs: StoreUpgradeConfig[] = [
+  {
+    "id": "store_signboard",
+    "name": "灯牌招牌",
+    "unlockLevel": 1,
+    "maxLevel": 8,
+    "baseUpgradeCost": 160,
+    "effectsPerLevel": {
+      "priceBonus": 0.012,
+      "rating": 0.25
+    },
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "亮灯招牌",
+        "effectText": "全菜品售价+3.6%，高消费顾客开始注意摊位",
+        "effects": {
+          "rating": 1
+        }
+      },
+      {
+        "level": 6,
+        "name": "霓虹灯牌",
+        "effectText": "全菜品售价继续成长，口碑+1",
+        "effects": {
+          "rating": 1
+        }
+      }
+    ],
+    "tags": [
+      "store",
+      "revenue"
+    ]
+  },
+  {
+    "id": "store_tables",
+    "name": "桌椅排队区",
+    "unlockLevel": 4,
+    "maxLevel": 8,
+    "baseUpgradeCost": 140,
+    "effectsPerLevel": {
+      "patienceBonus": 0.02
+    },
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "塑料桌椅",
+        "effectText": "顾客耐心明显提升，急性子流失降低",
+        "effects": {
+          "patienceBonus": 0.03
+        }
+      },
+      {
+        "level": 6,
+        "name": "遮阳排队区",
+        "effectText": "顾客耐心继续提升，客诉减免+3%",
+        "effects": {
+          "patienceBonus": 0.03,
+          "complaintReduce": 0.03
+        }
+      }
+    ],
+    "tags": [
+      "store",
+      "patience"
+    ]
+  },
+  {
+    "id": "store_fridge",
+    "name": "冰柜备货",
+    "unlockLevel": 8,
+    "maxLevel": 8,
+    "baseUpgradeCost": 180,
+    "effectsPerLevel": {
+      "costReduce": 0.018
+    },
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "冷藏备货",
+        "effectText": "食材损耗下降，成本再-3%",
+        "effects": {
+          "costReduce": 0.03
+        }
+      },
+      {
+        "level": 6,
+        "name": "分区冰柜",
+        "effectText": "成本控制继续提升，客诉减免+2%",
+        "effects": {
+          "costReduce": 0.03,
+          "complaintReduce": 0.02
+        }
+      }
+    ],
+    "tags": [
+      "store",
+      "cost_control"
+    ]
+  },
+  {
+    "id": "store_cleanliness",
+    "name": "清洁台",
+    "unlockLevel": 12,
+    "maxLevel": 6,
+    "baseUpgradeCost": 170,
+    "effectsPerLevel": {
+      "complaintReduce": 0.025,
+      "rating": 0.15
+    },
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "明亮灶台",
+        "effectText": "挑剔顾客流失下降，口碑+1",
+        "effects": {
+          "complaintReduce": 0.04,
+          "rating": 1
+        }
+      },
+      {
+        "level": 5,
+        "name": "整洁摊位",
+        "effectText": "客诉惩罚继续下降，高消费顾客更稳定",
+        "effects": {
+          "complaintReduce": 0.05
+        }
+      }
+    ],
+    "tags": [
+      "store",
+      "complaint"
+    ]
+  }
+];
+
+export const mvpAvatarConfigs: PlayerAvatarConfig[] = [
+  {
+    "id": "avatar_male_boss",
+    "name": "男老板",
+    "gender": "male",
+    "portraitPath": "placeholders/avatar/male_boss.svg",
+    "previewSpritePath": "placeholders/avatar/male_boss.svg",
+    "actionAnchor": {
+      "x": 0.5,
+      "y": 0.2
+    },
+    "tags": [
+      "boss",
+      "avatar"
+    ]
+  },
+  {
+    "id": "avatar_female_boss",
+    "name": "女老板",
+    "gender": "female",
+    "portraitPath": "placeholders/avatar/female_boss.svg",
+    "previewSpritePath": "placeholders/avatar/female_boss.svg",
+    "actionAnchor": {
+      "x": 0.5,
+      "y": 0.18
+    },
+    "tags": [
+      "boss",
+      "avatar"
+    ]
+  }
+];
+
+export const mvpCosmeticSetConfigs: CosmeticSetConfig[] = [
+  {
+    "id": "night_market_veteran",
+    "name": "夜市老手套装",
+    "requiredCosmeticIds": [
+      "cosmetic_straw_hat",
+      "cosmetic_canvas_apron",
+      "cosmetic_light_shoes",
+      "cosmetic_bamboo_tongs"
+    ],
+    "effects": {
+      "complaintReduce": 0.015,
+      "rating": 1
+    },
+    "tags": [
+      "set",
+      "stable_service"
+    ]
+  },
+  {
+    "id": "fresh_service_set",
+    "name": "清爽招待套装",
+    "requiredCosmeticIds": [
+      "cosmetic_tidy_hair",
+      "cosmetic_mint_tee",
+      "cosmetic_lemon_apron",
+      "cosmetic_anti_slip_sneakers"
+    ],
+    "effects": {
+      "patienceBonus": 0.01,
+      "tipBonus": 0.02
+    },
+    "tags": [
+      "set",
+      "tip"
+    ]
+  }
+];
+
+export const mvpCosmeticItemConfigs: CosmeticItemConfig[] = [
+  {
+    "id": "cosmetic_tidy_hair",
+    "name": "利落短发",
+    "slot": "hair",
+    "unlockLevel": 1,
+    "cost": 120,
+    "effects": {
+      "tipBonus": 0.005
+    },
+    "setId": "fresh_service_set",
+    "iconPath": "placeholders/avatar/icon_hair_tidy.svg",
+    "previewSpritePath": "placeholders/avatar/icon_hair_tidy.svg",
+    "tags": [
+      "cosmetic",
+      "hair"
+    ]
+  },
+  {
+    "id": "cosmetic_ponytail_band",
+    "name": "清爽发带",
+    "slot": "hair",
+    "unlockLevel": 4,
+    "cost": 240,
+    "effects": {
+      "patienceBonus": 0.01
+    },
+    "iconPath": "placeholders/avatar/icon_hair_band.svg",
+    "previewSpritePath": "placeholders/avatar/icon_hair_band.svg",
+    "tags": [
+      "cosmetic",
+      "hair"
+    ]
+  },
+  {
+    "id": "cosmetic_straw_hat",
+    "name": "夜市草编帽",
+    "slot": "hat",
+    "unlockLevel": 6,
+    "cost": 380,
+    "effects": {
+      "patienceBonus": 0.015
+    },
+    "setId": "night_market_veteran",
+    "iconPath": "placeholders/avatar/icon_hat_straw.svg",
+    "previewSpritePath": "placeholders/avatar/icon_hat_straw.svg",
+    "tags": [
+      "cosmetic",
+      "patience"
+    ]
+  },
+  {
+    "id": "cosmetic_mint_tee",
+    "name": "薄荷条纹衫",
+    "slot": "clothes",
+    "unlockLevel": 5,
+    "cost": 300,
+    "effects": {
+      "patienceBonus": 0.012
+    },
+    "setId": "fresh_service_set",
+    "iconPath": "placeholders/avatar/icon_clothes_mint.svg",
+    "previewSpritePath": "placeholders/avatar/icon_clothes_mint.svg",
+    "tags": [
+      "cosmetic",
+      "clothes"
+    ]
+  },
+  {
+    "id": "cosmetic_cooling_shirt",
+    "name": "透气工装衫",
+    "slot": "clothes",
+    "unlockLevel": 18,
+    "cost": 820,
+    "effects": {
+      "speedBonus": 0.018
+    },
+    "iconPath": "placeholders/avatar/icon_clothes_work.svg",
+    "previewSpritePath": "placeholders/avatar/icon_clothes_work.svg",
+    "tags": [
+      "cosmetic",
+      "speed"
+    ]
+  },
+  {
+    "id": "cosmetic_canvas_apron",
+    "name": "耐脏帆布围裙",
+    "slot": "apron",
+    "unlockLevel": 10,
+    "cost": 520,
+    "effects": {
+      "costReduce": 0.015,
+      "complaintReduce": 0.01
+    },
+    "setId": "night_market_veteran",
+    "iconPath": "placeholders/avatar/icon_apron_canvas.svg",
+    "previewSpritePath": "placeholders/avatar/icon_apron_canvas.svg",
+    "tags": [
+      "cosmetic",
+      "cost_control"
+    ]
+  },
+  {
+    "id": "cosmetic_lemon_apron",
+    "name": "柠檬印花围裙",
+    "slot": "apron",
+    "unlockLevel": 12,
+    "cost": 560,
+    "effects": {
+      "tipBonus": 0.018
+    },
+    "setId": "fresh_service_set",
+    "iconPath": "placeholders/avatar/icon_apron_lemon.svg",
+    "previewSpritePath": "placeholders/avatar/icon_apron_lemon.svg",
+    "tags": [
+      "cosmetic",
+      "tip"
+    ]
+  },
+  {
+    "id": "cosmetic_light_shoes",
+    "name": "轻便胶鞋",
+    "slot": "shoes",
+    "unlockLevel": 16,
+    "cost": 760,
+    "effects": {
+      "speedBonus": 0.02
+    },
+    "setId": "night_market_veteran",
+    "iconPath": "placeholders/avatar/icon_shoes_light.svg",
+    "previewSpritePath": "placeholders/avatar/icon_shoes_light.svg",
+    "tags": [
+      "cosmetic",
+      "speed"
+    ]
+  },
+  {
+    "id": "cosmetic_anti_slip_sneakers",
+    "name": "防滑运动鞋",
+    "slot": "shoes",
+    "unlockLevel": 22,
+    "cost": 940,
+    "effects": {
+      "speedBonus": 0.025
+    },
+    "setId": "fresh_service_set",
+    "iconPath": "placeholders/avatar/icon_shoes_sneakers.svg",
+    "previewSpritePath": "placeholders/avatar/icon_shoes_sneakers.svg",
+    "tags": [
+      "cosmetic",
+      "speed"
+    ]
+  },
+  {
+    "id": "cosmetic_cashier_gloves",
+    "name": "收银防烫手套",
+    "slot": "gloves",
+    "unlockLevel": 20,
+    "cost": 880,
+    "effects": {
+      "complaintReduce": 0.012,
+      "tipBonus": 0.01
+    },
+    "iconPath": "placeholders/avatar/icon_gloves_cashier.svg",
+    "previewSpritePath": "placeholders/avatar/icon_gloves_cashier.svg",
+    "tags": [
+      "cosmetic",
+      "complaint"
+    ]
+  },
+  {
+    "id": "cosmetic_bamboo_tongs",
+    "name": "竹柄夹子",
+    "slot": "tool",
+    "unlockLevel": 24,
+    "cost": 1080,
+    "effects": {
+      "speedBonus": 0.03
+    },
+    "setId": "night_market_veteran",
+    "iconPath": "placeholders/avatar/icon_tool_tongs.svg",
+    "previewSpritePath": "placeholders/avatar/icon_tool_tongs.svg",
+    "tags": [
+      "cosmetic",
+      "tool"
+    ]
+  },
+  {
+    "id": "cosmetic_pro_spatula",
+    "name": "顺手铁铲",
+    "slot": "tool",
+    "unlockLevel": 28,
+    "cost": 1380,
+    "effects": {
+      "speedBonus": 0.045,
+      "complaintReduce": 0.015
+    },
+    "iconPath": "placeholders/avatar/icon_tool_spatula.svg",
+    "previewSpritePath": "placeholders/avatar/icon_tool_spatula.svg",
+    "tags": [
+      "cosmetic",
+      "tool"
     ]
   }
 ];
@@ -706,9 +1712,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 360,
-      "coin2": 450,
-      "coin3": 540
+      "coin1": 330,
+      "coin2": 400,
+      "coin3": 480
     },
     "modifiers": {
       "customerCount": 12,
@@ -735,9 +1741,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
       "mainText": "做出6份炸鸡排",
       "targetDishId": "dish_004",
       "targetDishCount": 6,
-      "coin1": 380,
-      "coin2": 480,
-      "coin3": 570
+      "coin1": 360,
+      "coin2": 440,
+      "coin3": 520
     },
     "modifiers": {
       "customerCount": 12,
@@ -766,9 +1772,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 430,
-      "coin2": 540,
-      "coin3": 650
+      "coin1": 390,
+      "coin2": 480,
+      "coin3": 570
     },
     "modifiers": {
       "customerCount": 14,
@@ -794,9 +1800,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 460,
-      "coin2": 580,
-      "coin3": 700
+      "coin1": 420,
+      "coin2": 510,
+      "coin3": 610
     },
     "modifiers": {
       "customerCount": 14,
@@ -823,9 +1829,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 520,
-      "coin2": 650,
-      "coin3": 780
+      "coin1": 490,
+      "coin2": 600,
+      "coin3": 710
     },
     "modifiers": {
       "customerCount": 16,
@@ -852,9 +1858,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     "goals": {
       "mainText": "连续满意7人",
       "combo": 7,
-      "coin1": 500,
-      "coin2": 620,
-      "coin3": 750
+      "coin1": 470,
+      "coin2": 570,
+      "coin3": 680
     },
     "modifiers": {
       "customerCount": 15,
@@ -881,9 +1887,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 610,
-      "coin2": 760,
-      "coin3": 910
+      "coin1": 460,
+      "coin2": 560,
+      "coin3": 670
     },
     "modifiers": {
       "customerCount": 17,
@@ -909,9 +1915,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
       "mainText": "做出6份奶茶",
       "targetDishId": "dish_005",
       "targetDishCount": 6,
-      "coin1": 600,
-      "coin2": 750,
-      "coin3": 900
+      "coin1": 540,
+      "coin2": 660,
+      "coin3": 780
     },
     "modifiers": {
       "customerCount": 16,
@@ -941,9 +1947,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 760,
-      "coin2": 950,
-      "coin3": 1140
+      "coin1": 630,
+      "coin2": 770,
+      "coin3": 910
     },
     "modifiers": {
       "customerCount": 19,
@@ -972,9 +1978,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 900,
-      "coin2": 1120,
-      "coin3": 1350
+      "coin1": 630,
+      "coin2": 770,
+      "coin3": 910
     },
     "modifiers": {
       "customerCount": 22,
@@ -999,9 +2005,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 760,
-      "coin2": 950,
-      "coin3": 1140
+      "coin1": 560,
+      "coin2": 680,
+      "coin3": 810
     },
     "modifiers": {
       "customerCount": 18,
@@ -1027,9 +2033,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 820,
-      "coin2": 1020,
-      "coin3": 1230
+      "coin1": 610,
+      "coin2": 740,
+      "coin3": 880
     },
     "modifiers": {
       "customerCount": 20,
@@ -1056,9 +2062,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
       "mainText": "卖出8杯奶茶",
       "targetDishId": "dish_005",
       "targetDishCount": 8,
-      "coin1": 800,
-      "coin2": 1000,
-      "coin3": 1200
+      "coin1": 620,
+      "coin2": 760,
+      "coin3": 900
     },
     "modifiers": {
       "customerCount": 20,
@@ -1089,9 +2095,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
       "mainText": "做出6份热狗",
       "targetDishId": "dish_006",
       "targetDishCount": 6,
-      "coin1": 780,
-      "coin2": 980,
-      "coin3": 1170
+      "coin1": 620,
+      "coin2": 760,
+      "coin3": 900
     },
     "modifiers": {
       "customerCount": 19,
@@ -1120,9 +2126,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 1050,
-      "coin2": 1320,
-      "coin3": 1580
+      "coin1": 820,
+      "coin2": 1000,
+      "coin3": 1190
     },
     "modifiers": {
       "customerCount": 24,
@@ -1150,9 +2156,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 980,
-      "coin2": 1230,
-      "coin3": 1470
+      "coin1": 760,
+      "coin2": 930,
+      "coin3": 1100
     },
     "modifiers": {
       "customerCount": 23,
@@ -1178,9 +2184,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     "goals": {
       "mainText": "连续满意8人",
       "combo": 8,
-      "coin1": 960,
-      "coin2": 1200,
-      "coin3": 1440
+      "coin1": 740,
+      "coin2": 900,
+      "coin3": 1070
     },
     "modifiers": {
       "customerCount": 22,
@@ -1208,9 +2214,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 1120,
-      "coin2": 1400,
-      "coin3": 1680
+      "coin1": 850,
+      "coin2": 1040,
+      "coin3": 1230
     },
     "modifiers": {
       "customerCount": 25,
@@ -1238,9 +2244,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
       "mainText": "卖出9份热狗",
       "targetDishId": "dish_006",
       "targetDishCount": 9,
-      "coin1": 1100,
-      "coin2": 1380,
-      "coin3": 1650
+      "coin1": 850,
+      "coin2": 1040,
+      "coin3": 1230
     },
     "modifiers": {
       "customerCount": 24,
@@ -1270,9 +2276,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 1450,
-      "coin2": 1810,
-      "coin3": 2170
+      "coin1": 1120,
+      "coin2": 1370,
+      "coin3": 1620
     },
     "modifiers": {
       "customerCount": 30,
@@ -1289,4 +2295,8 @@ export const defaultConfigBundle: ConfigBundle = {
   dishes: mvpDishConfigs,
   customers: mvpCustomerConfigs,
   equipments: mvpEquipmentConfigs,
+  storeUpgrades: mvpStoreUpgradeConfigs,
+  avatars: mvpAvatarConfigs,
+  cosmetics: mvpCosmeticItemConfigs,
+  cosmeticSets: mvpCosmeticSetConfigs,
 };

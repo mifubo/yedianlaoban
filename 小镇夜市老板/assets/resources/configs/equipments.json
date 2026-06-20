@@ -6,11 +6,43 @@
     "slotCountBase": 1,
     "slotCountMax": 3,
     "baseUpgradeCost": 120,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "mvp",
       "hot_surface"
+    ],
+    "maxLevel": 12,
+    "slotUnlockLevels": [
+      3,
+      7
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "双面铁板",
+        "effectText": "解锁第2工位，烤冷面高峰不堵单",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 7,
+        "name": "宽面铁板",
+        "effectText": "解锁第3工位，支持多份并行",
+        "effects": {
+          "speedBonus": 0.03
+        }
+      },
+      {
+        "level": 10,
+        "name": "明火铁板",
+        "effectText": "铁板类制作速度再+6%，口碑+1",
+        "effects": {
+          "speedBonus": 0.06,
+          "rating": 1
+        }
+      }
     ]
   },
   {
@@ -20,11 +52,56 @@
     "slotCountBase": 1,
     "slotCountMax": 3,
     "baseUpgradeCost": 100,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "mvp",
       "drink"
+    ],
+    "maxLevel": 12,
+    "slotUnlockLevels": [
+      3,
+      7
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "双杯饮品台",
+        "effectText": "同时排队2杯饮品",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 5,
+        "name": "茶香萃取器",
+        "effectText": "支撑鸭屎香柠檬水，饮品小费+2%",
+        "effects": {
+          "tipBonus": 0.02
+        },
+        "unlocks": [
+          "drink_yashixiang_lemonade"
+        ]
+      },
+      {
+        "level": 7,
+        "name": "三杯饮品台",
+        "effectText": "同时排队3杯饮品",
+        "effects": {
+          "speedBonus": 0.03
+        }
+      },
+      {
+        "level": 10,
+        "name": "霸王杯封口机",
+        "effectText": "支撑霸王饮品，制作速度再+6%",
+        "effects": {
+          "speedBonus": 0.06
+        },
+        "unlocks": [
+          "drink_king_series"
+        ]
+      }
     ]
   },
   {
@@ -34,10 +111,42 @@
     "slotCountBase": 1,
     "slotCountMax": 3,
     "baseUpgradeCost": 150,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "main_food"
+    ],
+    "maxLevel": 12,
+    "slotUnlockLevels": [
+      3,
+      7
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "双灶炒锅",
+        "effectText": "解锁第2工位，主食高峰更稳",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 7,
+        "name": "猛火双灶",
+        "effectText": "解锁第3工位，炒饭产能提升",
+        "effects": {
+          "speedBonus": 0.03
+        }
+      },
+      {
+        "level": 10,
+        "name": "锅气猛火灶",
+        "effectText": "炒锅制作速度再+6%，小费+2%",
+        "effects": {
+          "speedBonus": 0.06,
+          "tipBonus": 0.02
+        }
+      }
     ]
   },
   {
@@ -47,10 +156,42 @@
     "slotCountBase": 1,
     "slotCountMax": 3,
     "baseUpgradeCost": 180,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "fried"
+    ],
+    "maxLevel": 12,
+    "slotUnlockLevels": [
+      3,
+      7
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "双篮油锅",
+        "effectText": "解锁第2工位，炸鸡排不压单",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 7,
+        "name": "控温油锅",
+        "effectText": "解锁第3工位，减少炸制等待",
+        "effects": {
+          "speedBonus": 0.03
+        }
+      },
+      {
+        "level": 10,
+        "name": "酥脆油锅",
+        "effectText": "油炸制作速度再+6%，小费+2%",
+        "effects": {
+          "speedBonus": 0.06,
+          "tipBonus": 0.02
+        }
+      }
     ]
   },
   {
@@ -60,10 +201,42 @@
     "slotCountBase": 1,
     "slotCountMax": 3,
     "baseUpgradeCost": 220,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "grill"
+    ],
+    "maxLevel": 12,
+    "slotUnlockLevels": [
+      3,
+      7
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "双排烤炉",
+        "effectText": "解锁第2工位，热狗放学潮更稳",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 7,
+        "name": "三排烤炉",
+        "effectText": "解锁第3工位，高峰可并行",
+        "effects": {
+          "speedBonus": 0.03
+        }
+      },
+      {
+        "level": 10,
+        "name": "炭香烤炉",
+        "effectText": "烧烤制作速度再+6%，口碑+1",
+        "effects": {
+          "speedBonus": 0.06,
+          "rating": 1
+        }
+      }
     ]
   },
   {
@@ -73,10 +246,32 @@
     "slotCountBase": 1,
     "slotCountMax": 2,
     "baseUpgradeCost": 320,
-    "speedBonusPerLevel": 0.05,
-    "maxSpeedBonus": 0.35,
+    "speedBonusPerLevel": 0.04,
+    "maxSpeedBonus": 0.36,
     "tags": [
       "specialty"
+    ],
+    "maxLevel": 10,
+    "slotUnlockLevels": [
+      4
+    ],
+    "upgradeMilestones": [
+      {
+        "level": 4,
+        "name": "丸子炉扩容",
+        "effectText": "解锁额外工位，减少高峰堵单",
+        "effects": {
+          "speedBonus": 0.02
+        }
+      },
+      {
+        "level": 8,
+        "name": "丸子炉强化",
+        "effectText": "制作速度再+5%",
+        "effects": {
+          "speedBonus": 0.05
+        }
+      }
     ]
   }
 ]

@@ -14,17 +14,13 @@ import { GameContext, GameResumeState } from '../core/game/GameContext';
 import { buildLevelResult } from '../core/game/GameSession';
 import { SceneName } from '../core/game/SceneNames';
 import { SaveSystem, PlayerSaveData } from '../core/save/SaveSystem';
+import { EconomySystem } from '../systems/EconomySystem';
 
 const { ccclass, property } = _decorator;
 
 type BusinessPhase = 'idle' | 'running' | 'paused' | 'ended';
 type CustomerStatus = 'waiting' | 'served' | 'left';
 type CookingSlotStatus = 'idle' | 'cooking';
-
-const MAX_QUICK_SERVICE_BONUS = 0.45;
-const COMBO_REWARD_BONUS_PER_STEP = 0.05;
-const MAX_COMBO_REWARD_BONUS = 0.25;
-const SERVICE_COIN_BONUS = 8;
 
 interface SpawnPlanItem {
   spawnAtSec: number;
@@ -663,8 +659,10 @@ export class GameScene extends Component {
 
   private createRuntimeCustomer(spawnItem: SpawnPlanItem): RuntimeCustomer {
     const customerConfig = this.getCustomerConfig(spawnItem.customerId);
-    const patienceMultiplier = this.level?.modifiers.patienceMultiplier ?? 1;
-    const maxPatienceSec = customerConfig.basePatience * patienceMultiplier;
+    const maxPatienceSec =
+      this.level && this.configs && this.saveData
+        ? EconomySystem.getCustomerPatienceSec(customerConfig, this.level, this.configs, this.saveData)
+        : customerConfig.basePatience;
     this.customerSerial += 1;
 
     return {
@@ -767,6 +765,13 @@ export class GameScene extends Component {
     customer.status = 'left';
     this.angryLeaveCount += 1;
     this.combo = 0;
+    if (this.configs && this.saveData) {
+      const penalty = EconomySystem.calculateAngryLeavePenalty(this.configs, this.saveData);
+      this.earnedCoins = Math.max(0, this.earnedCoins - penalty);
+      if (penalty > 0) {
+        this.log(`${customer.name} left angry, complaint penalty -${penalty} coins.`);
+      }
+    }
     this.activeCustomers = this.activeCustomers.filter((item) => item.runtimeId !== customer.runtimeId);
     this.spawnDueCustomers();
     this.log(`${customer.name} left angry.`);
@@ -778,32 +783,30 @@ export class GameScene extends Component {
   private registerWrongServe(customer: RuntimeCustomer): void {
     this.wrongServeCount += 1;
     this.combo = 0;
+    if (this.configs && this.saveData) {
+      const penalty = EconomySystem.calculateWrongServePenalty(this.configs, this.saveData);
+      this.earnedCoins = Math.max(0, this.earnedCoins - penalty);
+    }
     customer.patienceRemainingSec = Math.max(0, customer.patienceRemainingSec - 2);
     this.log(`Wrong serve attempt for ${customer.name}.`);
   }
 
   private calculateCustomerReward(customer: RuntimeCustomer): number {
-    const customerConfig = this.getCustomerConfig(customer.configId);
-    const patienceRatio = customer.maxPatienceSec <= 0 ? 0 : customer.patienceRemainingSec / customer.maxPatienceSec;
-    const satisfactionBonus = 1 + Math.max(0, patienceRatio) * MAX_QUICK_SERVICE_BONUS;
-    const comboBonus = Math.min(MAX_COMBO_REWARD_BONUS, Math.max(0, this.combo) * COMBO_REWARD_BONUS_PER_STEP);
-    const levelRewardMultiplier = this.level?.modifiers.rewardMultiplier ?? 1;
-    let total = 0;
-
-    for (const dishId of customer.orderDishIds) {
-      const dish = this.configs?.dishById.get(dishId);
-      if (!dish) {
-        continue;
-      }
-
-      total += this.getDishPrice(dish);
+    if (!this.configs || !this.saveData || !this.level) {
+      return 1;
     }
 
-    return Math.max(
-      1,
-      Math.round(total * customerConfig.tipMultiplier * levelRewardMultiplier * (satisfactionBonus + comboBonus)) +
-        SERVICE_COIN_BONUS
-    );
+    const customerConfig = this.getCustomerConfig(customer.configId);
+    const patienceRatio = customer.maxPatienceSec <= 0 ? 0 : customer.patienceRemainingSec / customer.maxPatienceSec;
+    return EconomySystem.calculateCustomerReward(
+      this.configs,
+      this.saveData,
+      this.level,
+      customerConfig,
+      customer.orderDishIds,
+      patienceRatio,
+      this.combo,
+    ).netCoins;
   }
 
   private pickNextDishForEquipment(equipmentId: EquipmentId): DishId | null {
@@ -1008,22 +1011,26 @@ export class GameScene extends Component {
   }
 
   private getDishPrice(dish: DishConfig): number {
-    const dishLevel = this.saveData?.dishLevels[dish.id] ?? 1;
-    const priceBonus = 1 + Math.max(0, dishLevel - 1) * 0.08;
-    return Math.round(dish.basePrice * priceBonus);
+    if (!this.configs || !this.saveData) {
+      return dish.basePrice;
+    }
+
+    const effects = EconomySystem.getTotalEconomyEffects(this.configs, this.saveData);
+    return EconomySystem.getDishPriceForSave(dish, this.saveData, effects);
   }
 
   private getCookDurationSec(dish: DishConfig): number {
-    const equipment = this.configs?.equipmentById.get(dish.stationId);
-    const equipmentLevel = equipment ? this.saveData?.equipmentLevels[equipment.id] ?? 1 : 1;
-    const speedBonus = equipment ? Math.min(equipment.maxSpeedBonus, Math.max(0, equipmentLevel - 1) * equipment.speedBonusPerLevel) : 0;
-    return Math.max(0.5, dish.baseCookTime * (1 - speedBonus));
+    if (!this.configs || !this.saveData) {
+      return dish.baseCookTime;
+    }
+
+    const equipment = this.configs.equipmentById.get(dish.stationId);
+    return EconomySystem.getCookDurationSec(dish, equipment, this.saveData, this.configs);
   }
 
   private getEquipmentSlotCount(equipment: EquipmentConfig): number {
     const equipmentLevel = this.saveData?.equipmentLevels[equipment.id] ?? 1;
-    const extraSlots = Math.floor(Math.max(0, equipmentLevel - 1) / 2);
-    return Math.min(equipment.slotCountMax, equipment.slotCountBase + extraSlots);
+    return EconomySystem.getEquipmentSlotCountAtLevel(equipment, equipmentLevel);
   }
 
   private getTotalDurationSec(): number {

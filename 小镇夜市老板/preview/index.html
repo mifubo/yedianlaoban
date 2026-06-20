@@ -8,16 +8,51 @@
   </head>
   <body>
     <main class="phone">
-      <section id="homeView" class="view">
+      <section id="avatarSelectView" class="view hidden">
         <section class="topbar">
           <div>
-            <div class="kicker">老街路口</div>
-            <h1>小镇夜市老板</h1>
+            <div class="kicker">开张前</div>
+            <h1>选择老板</h1>
           </div>
-          <button id="homeUpgradeButton" class="small-button" type="button">升级</button>
         </section>
 
-        <section class="hud home-hud">
+        <section class="avatar-select-stage">
+          <button id="selectMaleAvatarButton" class="avatar-choice" type="button" data-gender="male">
+            <img src="../assets/resources/placeholders/avatar/male_boss.svg" alt="男老板" />
+            <strong>男老板</strong>
+          </button>
+          <button id="selectFemaleAvatarButton" class="avatar-choice" type="button" data-gender="female">
+            <img src="../assets/resources/placeholders/avatar/female_boss.svg" alt="女老板" />
+            <strong>女老板</strong>
+          </button>
+        </section>
+      </section>
+
+      <section id="homeView" class="view home-screen">
+        <section class="topbar home-topbar">
+          <button
+            id="homeTitleButton"
+            class="title-lockup"
+            type="button"
+            aria-controls="homeAdminPanel"
+            aria-expanded="false"
+          >
+            <span class="kicker">老街路口</span>
+            <span class="home-title">小镇夜市老板</span>
+          </button>
+          <button id="homeUpgradeButton" class="street-entry-button" type="button">商业街</button>
+        </section>
+
+        <section id="homeAdminPanel" class="admin-panel hidden" aria-label="存档管理">
+          <div class="admin-copy">
+            <strong>存档管理</strong>
+            <span>本地预览工具</span>
+          </div>
+          <button id="homeLevelOneButton" class="secondary-button" type="button">从第 1 关开始</button>
+          <button id="clearSaveButton" class="danger-button" type="button">清除存档</button>
+        </section>
+
+        <section class="hud home-hud home-status-strip">
           <div class="meter">
             <span>当前关</span>
             <strong id="homeLevelText">1</strong>
@@ -37,7 +72,14 @@
         </section>
 
         <section class="home-stage">
+          <div class="lantern-string"></div>
+          <div class="street-stalls">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
           <div class="stall-sign">老街夜市</div>
+          <button id="playCurrentButton" class="play-main-button" type="button">进入第 1 关</button>
           <div class="stall-counter">
             <div class="pan"></div>
             <div class="drink-cup"></div>
@@ -45,10 +87,11 @@
           </div>
         </section>
 
-        <section class="home-actions">
-          <button id="playCurrentButton" type="button">进入第 1 关</button>
-          <button id="homeLevelOneButton" type="button">从第 1 关开始</button>
-          <button id="clearSaveButton" class="secondary-button" type="button">清除存档</button>
+        <section class="home-actions bottom-dock">
+          <button id="homeOutfitButton" type="button">装扮</button>
+          <button id="homeEquipmentButton" type="button">设备管理</button>
+          <button id="homeGrowthButton" type="button">个人成长</button>
+          <button id="dailyAdButton" type="button">每日广告奖励</button>
         </section>
       </section>
 
@@ -120,31 +163,68 @@
       <section id="upgradeView" class="view hidden">
         <section class="topbar">
           <div>
-            <div class="kicker">升级摊位</div>
-            <h1>设备和菜品</h1>
+            <div id="upgradeKicker" class="kicker">老街商业街</div>
+            <h1 id="upgradeTitle">商业街</h1>
           </div>
           <button id="upgradeBackButton" class="small-button" type="button">返回</button>
         </section>
 
         <section class="hud home-hud">
-          <div class="meter">
+          <div id="upgradeCoinMeter" class="meter">
             <span>金币</span>
             <strong id="upgradeCoinText">0</strong>
           </div>
-          <div class="meter">
+          <div id="upgradeLevelMeter" class="meter">
             <span>当前关</span>
             <strong id="upgradeLevelText">1</strong>
           </div>
         </section>
 
-        <section class="panel upgrade-panel">
-          <div class="panel-title">设备</div>
-          <div id="equipmentUpgradeList" class="upgrade-list"></div>
+        <section id="outfitSection" class="panel avatar-panel hidden">
+          <div class="panel-title">角色</div>
+          <div class="avatar-row">
+            <img id="upgradeAvatarImage" alt="当前老板角色" />
+            <div class="avatar-copy">
+              <strong id="upgradeAvatarText">男老板</strong>
+              <span id="upgradeOutfitText">未装备装扮</span>
+            </div>
+          </div>
+          <div id="outfitList" class="upgrade-list outfit-list"></div>
         </section>
 
-        <section class="panel upgrade-panel">
-          <div class="panel-title">菜品</div>
-          <div id="dishUpgradeList" class="upgrade-list"></div>
+        <section id="marketSection" class="panel upgrade-panel">
+          <div class="panel-title">商业街</div>
+          <div id="commercialStreet" class="commercial-street">
+            <img src="../assets/resources/placeholders/commercial_street.svg" alt="老街商业街" />
+            <button class="shop-hotspot outfit-shop" type="button" data-shop-id="outfitShop">装扮铺</button>
+            <button class="shop-hotspot appliance-shop" type="button" data-shop-id="applianceShop">电器铺</button>
+            <button class="shop-hotspot kitchen-mall" type="button" data-shop-id="kitchenMall">厨具商场</button>
+          </div>
+        </section>
+
+        <section id="shopSection" class="panel upgrade-panel hidden">
+          <div class="shop-interior">
+            <button id="streetBackButton" class="small-button" type="button">街道</button>
+            <div id="shopFixture" class="shop-fixture wardrobe"></div>
+            <button id="shopkeeperButton" class="shopkeeper" type="button">
+              <span id="shopkeeperFace" class="shopkeeper-face"></span>
+              <span id="shopkeeperBubble" class="shopkeeper-bubble">来看看新货。</span>
+            </button>
+          </div>
+          <div class="shop-shelf-title">
+            <strong id="activeShopName">装扮铺</strong>
+          </div>
+          <div id="shopItemList" class="upgrade-list"></div>
+        </section>
+
+        <section id="equipmentManageSection" class="panel upgrade-panel hidden">
+          <div class="panel-title">设备管理</div>
+          <div id="equipmentManageList" class="upgrade-list"></div>
+        </section>
+
+        <section id="personalGrowthSection" class="panel upgrade-panel hidden">
+          <div class="panel-title">个人成长</div>
+          <div id="personalGrowthList" class="upgrade-list"></div>
         </section>
       </section>
 
@@ -154,7 +234,7 @@
           <div id="resultStats" class="result-stats"></div>
           <div class="result-actions">
             <button id="claimButton" type="button">领取金币</button>
-            <button id="adDoubleButton" type="button">广告翻倍 mock</button>
+            <button id="adDoubleButton" type="button">广告追加金币 mock</button>
             <button id="adExtendButton" type="button">广告续时 +15s mock</button>
             <button id="retryButton" type="button">重玩</button>
             <button id="nextButton" type="button">下一关</button>

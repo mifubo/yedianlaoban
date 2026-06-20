@@ -287,9 +287,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 360,
-      "coin2": 450,
-      "coin3": 540
+      "coin1": 330,
+      "coin2": 400,
+      "coin3": 480
     },
     "modifiers": {
       "customerCount": 12,
@@ -316,9 +316,9 @@
       "mainText": "做出6份炸鸡排",
       "targetDishId": "dish_004",
       "targetDishCount": 6,
-      "coin1": 380,
-      "coin2": 480,
-      "coin3": 570
+      "coin1": 360,
+      "coin2": 440,
+      "coin3": 520
     },
     "modifiers": {
       "customerCount": 12,
@@ -347,9 +347,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 430,
-      "coin2": 540,
-      "coin3": 650
+      "coin1": 390,
+      "coin2": 480,
+      "coin3": 570
     },
     "modifiers": {
       "customerCount": 14,
@@ -375,9 +375,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 460,
-      "coin2": 580,
-      "coin3": 700
+      "coin1": 420,
+      "coin2": 510,
+      "coin3": 610
     },
     "modifiers": {
       "customerCount": 14,
@@ -404,9 +404,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 520,
-      "coin2": 650,
-      "coin3": 780
+      "coin1": 490,
+      "coin2": 600,
+      "coin3": 710
     },
     "modifiers": {
       "customerCount": 16,
@@ -433,9 +433,9 @@
     "goals": {
       "mainText": "连续满意7人",
       "combo": 7,
-      "coin1": 500,
-      "coin2": 620,
-      "coin3": 750
+      "coin1": 470,
+      "coin2": 570,
+      "coin3": 680
     },
     "modifiers": {
       "customerCount": 15,
@@ -462,9 +462,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 610,
-      "coin2": 760,
-      "coin3": 910
+      "coin1": 460,
+      "coin2": 560,
+      "coin3": 670
     },
     "modifiers": {
       "customerCount": 17,
@@ -490,9 +490,9 @@
       "mainText": "做出6份奶茶",
       "targetDishId": "dish_005",
       "targetDishCount": 6,
-      "coin1": 600,
-      "coin2": 750,
-      "coin3": 900
+      "coin1": 540,
+      "coin2": 660,
+      "coin3": 780
     },
     "modifiers": {
       "customerCount": 16,
@@ -522,9 +522,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 760,
-      "coin2": 950,
-      "coin3": 1140
+      "coin1": 630,
+      "coin2": 770,
+      "coin3": 910
     },
     "modifiers": {
       "customerCount": 19,
@@ -553,9 +553,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 900,
-      "coin2": 1120,
-      "coin3": 1350
+      "coin1": 630,
+      "coin2": 770,
+      "coin3": 910
     },
     "modifiers": {
       "customerCount": 22,
@@ -580,9 +580,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 760,
-      "coin2": 950,
-      "coin3": 1140
+      "coin1": 560,
+      "coin2": 680,
+      "coin3": 810
     },
     "modifiers": {
       "customerCount": 18,
@@ -608,9 +608,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 820,
-      "coin2": 1020,
-      "coin3": 1230
+      "coin1": 610,
+      "coin2": 740,
+      "coin3": 880
     },
     "modifiers": {
       "customerCount": 20,
@@ -637,9 +637,9 @@
       "mainText": "卖出8杯奶茶",
       "targetDishId": "dish_005",
       "targetDishCount": 8,
-      "coin1": 800,
-      "coin2": 1000,
-      "coin3": 1200
+      "coin1": 620,
+      "coin2": 760,
+      "coin3": 900
     },
     "modifiers": {
       "customerCount": 20,
@@ -670,9 +670,9 @@
       "mainText": "做出6份热狗",
       "targetDishId": "dish_006",
       "targetDishCount": 6,
-      "coin1": 780,
-      "coin2": 980,
-      "coin3": 1170
+      "coin1": 620,
+      "coin2": 760,
+      "coin3": 900
     },
     "modifiers": {
       "customerCount": 19,
@@ -701,9 +701,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 1050,
-      "coin2": 1320,
-      "coin3": 1580
+      "coin1": 820,
+      "coin2": 1000,
+      "coin3": 1190
     },
     "modifiers": {
       "customerCount": 24,
@@ -731,9 +731,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 980,
-      "coin2": 1230,
-      "coin3": 1470
+      "coin1": 760,
+      "coin2": 930,
+      "coin3": 1100
     },
     "modifiers": {
       "customerCount": 23,
@@ -759,9 +759,9 @@
     "goals": {
       "mainText": "连续满意8人",
       "combo": 8,
-      "coin1": 960,
-      "coin2": 1200,
-      "coin3": 1440
+      "coin1": 740,
+      "coin2": 900,
+      "coin3": 1070
     },
     "modifiers": {
       "customerCount": 22,
@@ -789,9 +789,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 1120,
-      "coin2": 1400,
-      "coin3": 1680
+      "coin1": 850,
+      "coin2": 1040,
+      "coin3": 1230
     },
     "modifiers": {
       "customerCount": 25,
@@ -819,9 +819,9 @@
       "mainText": "卖出9份热狗",
       "targetDishId": "dish_006",
       "targetDishCount": 9,
-      "coin1": 1100,
-      "coin2": 1380,
-      "coin3": 1650
+      "coin1": 850,
+      "coin2": 1040,
+      "coin3": 1230
     },
     "modifiers": {
       "customerCount": 24,
@@ -851,9 +851,9 @@
     },
     "goals": {
       "mainText": "赚够金币",
-      "coin1": 1450,
-      "coin2": 1810,
-      "coin3": 2170
+      "coin1": 1120,
+      "coin2": 1370,
+      "coin3": 1620
     },
     "modifiers": {
       "customerCount": 30,
