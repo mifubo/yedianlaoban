@@ -13,6 +13,7 @@ export interface LevelResult {
   angryLeaveCount: number;
   wrongServeCount: number;
   stars: number;
+  rewardClaimed: boolean;
   canWatchDoubleRewardAd: boolean;
   canWatchExtendTimeAd: boolean;
 }
@@ -58,6 +59,7 @@ export function buildLevelResult(options: BuildLevelResultOptions): LevelResult 
     angryLeaveCount: options.angryLeaveCount ?? 0,
     wrongServeCount: options.wrongServeCount ?? 0,
     stars,
+    rewardClaimed: false,
     canWatchDoubleRewardAd: options.outcome === 'success' && baseRewardCoins > 0,
     canWatchExtendTimeAd: options.outcome === 'fail',
   };

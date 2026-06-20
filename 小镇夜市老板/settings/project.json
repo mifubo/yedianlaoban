@@ -12,8 +12,15 @@
   "mvpScope": {
     "levels": 10,
     "dishes": 3,
-    "equipments": 2,
+    "equipments": 3,
     "customers": 2,
     "monetization": "IAA ads only"
+  },
+  "configScope": {
+    "levels": 30,
+    "dishes": 12,
+    "equipments": 6,
+    "customers": 6,
+    "source": "关卡参数表_前30关.tsv + 小镇夜市老板_项目规划书.md"
   }
 }

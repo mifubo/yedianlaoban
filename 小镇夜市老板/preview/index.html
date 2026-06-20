@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>小镇夜市老板 - MVP 预览</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="phone">
+      <section id="homeView" class="view">
+        <section class="topbar">
+          <div>
+            <div class="kicker">老街路口</div>
+            <h1>小镇夜市老板</h1>
+          </div>
+          <button id="homeUpgradeButton" class="small-button" type="button">升级</button>
+        </section>
+
+        <section class="hud home-hud">
+          <div class="meter">
+            <span>当前关</span>
+            <strong id="homeLevelText">1</strong>
+          </div>
+          <div class="meter">
+            <span>金币</span>
+            <strong id="homeCoinText">0</strong>
+          </div>
+          <div class="meter">
+            <span>星级</span>
+            <strong id="homeStarText">0</strong>
+          </div>
+          <div class="meter">
+            <span>进度</span>
+            <strong id="homeProgressText">0/10</strong>
+          </div>
+        </section>
+
+        <section class="home-stage">
+          <div class="stall-sign">老街夜市</div>
+          <div class="stall-counter">
+            <div class="pan"></div>
+            <div class="drink-cup"></div>
+            <div class="rice-bowl"></div>
+          </div>
+        </section>
+
+        <section class="home-actions">
+          <button id="playCurrentButton" type="button">进入第 1 关</button>
+          <button id="homeLevelOneButton" type="button">从第 1 关开始</button>
+          <button id="clearSaveButton" class="secondary-button" type="button">清除存档</button>
+        </section>
+      </section>
+
+      <section id="gameView" class="view hidden">
+        <section class="topbar">
+          <div>
+            <div class="kicker">老街路口</div>
+            <h1>小镇夜市老板</h1>
+          </div>
+          <div class="top-actions">
+            <button id="gameHomeButton" class="small-button" type="button">首页</button>
+            <select id="levelSelect" aria-label="选择关卡"></select>
+          </div>
+        </section>
+
+        <section class="hud">
+          <div class="meter">
+            <span>倒计时</span>
+            <strong id="timeText">0.0s</strong>
+          </div>
+          <div class="meter">
+            <span>本局金币</span>
+            <strong id="coinText">0</strong>
+          </div>
+          <div class="meter">
+            <span>连击</span>
+            <strong id="comboText">0</strong>
+          </div>
+          <div class="meter">
+            <span>目标</span>
+            <strong id="goalText">-</strong>
+          </div>
+        </section>
+
+        <section class="street">
+          <div class="awning"></div>
+          <div id="customerLane" class="customer-lane"></div>
+        </section>
+
+        <section class="service">
+          <div class="panel stations-panel">
+            <div class="panel-title">设备</div>
+            <div id="stations" class="stations"></div>
+          </div>
+
+          <div class="panel inventory-panel">
+            <div class="panel-title">出餐台</div>
+            <div id="inventory" class="inventory"></div>
+          </div>
+        </section>
+
+        <section class="panel dish-panel">
+          <div class="panel-title">点菜制作</div>
+          <div id="dishButtons" class="dish-buttons"></div>
+        </section>
+
+        <section class="controls">
+          <button id="startButton" type="button">开始营业</button>
+          <button id="pauseButton" type="button">暂停</button>
+          <button id="resetButton" type="button">重开本关</button>
+        </section>
+
+        <section class="log">
+          <div class="panel-title">营业记录</div>
+          <div id="logList" class="log-list"></div>
+        </section>
+      </section>
+
+      <section id="upgradeView" class="view hidden">
+        <section class="topbar">
+          <div>
+            <div class="kicker">升级摊位</div>
+            <h1>设备和菜品</h1>
+          </div>
+          <button id="upgradeBackButton" class="small-button" type="button">返回</button>
+        </section>
+
+        <section class="hud home-hud">
+          <div class="meter">
+            <span>金币</span>
+            <strong id="upgradeCoinText">0</strong>
+          </div>
+          <div class="meter">
+            <span>当前关</span>
+            <strong id="upgradeLevelText">1</strong>
+          </div>
+        </section>
+
+        <section class="panel upgrade-panel">
+          <div class="panel-title">设备</div>
+          <div id="equipmentUpgradeList" class="upgrade-list"></div>
+        </section>
+
+        <section class="panel upgrade-panel">
+          <div class="panel-title">菜品</div>
+          <div id="dishUpgradeList" class="upgrade-list"></div>
+        </section>
+      </section>
+
+      <section id="resultOverlay" class="result-overlay hidden">
+        <div class="result-dialog">
+          <div id="resultTitle" class="result-title">结算</div>
+          <div id="resultStats" class="result-stats"></div>
+          <div class="result-actions">
+            <button id="claimButton" type="button">领取金币</button>
+            <button id="adDoubleButton" type="button">广告翻倍 mock</button>
+            <button id="adExtendButton" type="button">广告续时 +15s mock</button>
+            <button id="retryButton" type="button">重玩</button>
+            <button id="nextButton" type="button">下一关</button>
+            <button id="resultHomeButton" type="button">首页</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./game-preview.js" defer></script>
+  </body>
+</html>

@@ -15,6 +15,57 @@
     ]
   },
   {
+    "id": "customer_002",
+    "name": "学生",
+    "unlockChapter": 2,
+    "basePatience": 24,
+    "tipMultiplier": 0.95,
+    "preferredDishes": [
+      "dish_004",
+      "dish_005",
+      "dish_006"
+    ],
+    "maxOrderItems": 1,
+    "traits": [
+      "dense_flow",
+      "lower_ticket"
+    ]
+  },
+  {
+    "id": "customer_003",
+    "name": "夜班工人",
+    "unlockChapter": 3,
+    "basePatience": 32,
+    "tipMultiplier": 1.1,
+    "preferredDishes": [
+      "dish_003",
+      "dish_007",
+      "dish_008"
+    ],
+    "maxOrderItems": 2,
+    "traits": [
+      "main_food",
+      "large_order"
+    ]
+  },
+  {
+    "id": "customer_004",
+    "name": "游客",
+    "unlockChapter": 4,
+    "basePatience": 30,
+    "tipMultiplier": 1.2,
+    "preferredDishes": [
+      "dish_010",
+      "dish_011",
+      "dish_012"
+    ],
+    "maxOrderItems": 2,
+    "traits": [
+      "combo_order",
+      "high_income"
+    ]
+  },
+  {
     "id": "customer_005",
     "name": "急性子",
     "unlockChapter": 1,
@@ -22,12 +73,30 @@
     "tipMultiplier": 1.25,
     "preferredDishes": [
       "dish_001",
-      "dish_002"
+      "dish_002",
+      "dish_006"
     ],
     "maxOrderItems": 1,
     "traits": [
       "low_patience",
       "pressure_intro"
+    ]
+  },
+  {
+    "id": "customer_006",
+    "name": "老熟客",
+    "unlockChapter": 3,
+    "basePatience": 36,
+    "tipMultiplier": 1.35,
+    "preferredDishes": [
+      "dish_001",
+      "dish_005",
+      "dish_009"
+    ],
+    "maxOrderItems": 1,
+    "traits": [
+      "combo_bonus",
+      "loyal"
     ]
   }
 ]

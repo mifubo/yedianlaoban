@@ -7,7 +7,10 @@
     "version": "3.x"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.check.json --noEmit"
+    "preview": "python3 -m http.server 5173",
+    "typecheck": "tsc -p tsconfig.check.json --noEmit",
+    "validate:configs": "node tools/validate-configs.mjs",
+    "test:mvp": "node tools/simulate-mvp.mjs"
   },
   "devDependencies": {
     "typescript": "^5.5.0"

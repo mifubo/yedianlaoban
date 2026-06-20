@@ -12,7 +12,11 @@
       "鸡蛋",
       "酱料"
     ],
-    "baseUpgradeCost": 80
+    "baseUpgradeCost": 80,
+    "tags": [
+      "chapter_1",
+      "mvp"
+    ]
   },
   {
     "id": "dish_002",
@@ -27,13 +31,17 @@
       "糖浆",
       "冰水"
     ],
-    "baseUpgradeCost": 70
+    "baseUpgradeCost": 70,
+    "tags": [
+      "chapter_1",
+      "mvp"
+    ]
   },
   {
     "id": "dish_003",
     "name": "鸡蛋炒饭",
     "unlockLevel": 6,
-    "stationId": "station_griddle",
+    "stationId": "station_wok",
     "basePrice": 15,
     "baseCookTime": 5,
     "complexity": 2,
@@ -44,7 +52,173 @@
     ],
     "baseUpgradeCost": 120,
     "tags": [
-      "mvp_reuse_griddle"
+      "chapter_1",
+      "mvp"
+    ]
+  },
+  {
+    "id": "dish_004",
+    "name": "炸鸡排",
+    "unlockLevel": 12,
+    "stationId": "station_fryer",
+    "basePrice": 18,
+    "baseCookTime": 6,
+    "complexity": 2,
+    "ingredients": [
+      "鸡排",
+      "炸粉",
+      "调味料"
+    ],
+    "baseUpgradeCost": 150,
+    "tags": [
+      "chapter_1",
+      "front30"
+    ]
+  },
+  {
+    "id": "dish_005",
+    "name": "奶茶",
+    "unlockLevel": 18,
+    "stationId": "station_drink",
+    "basePrice": 16,
+    "baseCookTime": 5,
+    "complexity": 2,
+    "ingredients": [
+      "茶汤",
+      "牛奶",
+      "珍珠"
+    ],
+    "baseUpgradeCost": 140,
+    "tags": [
+      "chapter_1",
+      "front30"
+    ]
+  },
+  {
+    "id": "dish_006",
+    "name": "热狗",
+    "unlockLevel": 24,
+    "stationId": "station_grill",
+    "basePrice": 20,
+    "baseCookTime": 6,
+    "complexity": 2,
+    "ingredients": [
+      "面包",
+      "香肠",
+      "酱料"
+    ],
+    "baseUpgradeCost": 170,
+    "tags": [
+      "chapter_2",
+      "front30"
+    ]
+  },
+  {
+    "id": "dish_007",
+    "name": "烤串",
+    "unlockLevel": 32,
+    "stationId": "station_grill",
+    "basePrice": 24,
+    "baseCookTime": 7,
+    "complexity": 3,
+    "ingredients": [
+      "肉串",
+      "孜然",
+      "辣椒面"
+    ],
+    "baseUpgradeCost": 220,
+    "tags": [
+      "chapter_2"
+    ]
+  },
+  {
+    "id": "dish_008",
+    "name": "炒面",
+    "unlockLevel": 42,
+    "stationId": "station_wok",
+    "basePrice": 28,
+    "baseCookTime": 7.5,
+    "complexity": 3,
+    "ingredients": [
+      "面条",
+      "青菜",
+      "酱油"
+    ],
+    "baseUpgradeCost": 250,
+    "tags": [
+      "chapter_3"
+    ]
+  },
+  {
+    "id": "dish_009",
+    "name": "铁板豆腐",
+    "unlockLevel": 52,
+    "stationId": "station_griddle",
+    "basePrice": 30,
+    "baseCookTime": 8,
+    "complexity": 3,
+    "ingredients": [
+      "豆腐",
+      "蒜蓉",
+      "酱料"
+    ],
+    "baseUpgradeCost": 270,
+    "tags": [
+      "chapter_3"
+    ]
+  },
+  {
+    "id": "dish_010",
+    "name": "冰粉",
+    "unlockLevel": 63,
+    "stationId": "station_drink",
+    "basePrice": 26,
+    "baseCookTime": 6,
+    "complexity": 2,
+    "ingredients": [
+      "冰粉",
+      "红糖水",
+      "花生碎"
+    ],
+    "baseUpgradeCost": 230,
+    "tags": [
+      "chapter_4"
+    ]
+  },
+  {
+    "id": "dish_011",
+    "name": "章鱼小丸子",
+    "unlockLevel": 70,
+    "stationId": "station_takoyaki",
+    "basePrice": 34,
+    "baseCookTime": 9,
+    "complexity": 4,
+    "ingredients": [
+      "面糊",
+      "章鱼粒",
+      "木鱼花"
+    ],
+    "baseUpgradeCost": 340,
+    "tags": [
+      "chapter_4"
+    ]
+  },
+  {
+    "id": "dish_012",
+    "name": "铁板鱿鱼",
+    "unlockLevel": 86,
+    "stationId": "station_griddle",
+    "basePrice": 40,
+    "baseCookTime": 10,
+    "complexity": 4,
+    "ingredients": [
+      "鱿鱼",
+      "洋葱",
+      "秘制酱"
+    ],
+    "baseUpgradeCost": 400,
+    "tags": [
+      "chapter_5"
     ]
   }
 ]

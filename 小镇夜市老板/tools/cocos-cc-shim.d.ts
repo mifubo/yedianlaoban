@@ -5,6 +5,10 @@ declare module 'cc' {
     json: unknown;
   }
 
+  export class Label {
+    string: string;
+  }
+
   type CocosPropertyDecorator = PropertyDecorator & ((options?: unknown) => PropertyDecorator);
 
   export const _decorator: {
