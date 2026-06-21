@@ -110,8 +110,9 @@ button:disabled {
 
 .home-screen {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  gap: 10px;
   overflow: hidden;
 }
 
@@ -269,6 +270,20 @@ select {
   min-height: 0;
 }
 
+#upgradeView:not(.hidden) {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 10px;
+  overflow: hidden;
+}
+
+#upgradeView .hud,
+#upgradeView .store-summary,
+#upgradeView .upgrade-panel,
+#upgradeView .avatar-panel {
+  margin-top: 0;
+}
+
 .hud {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -284,7 +299,7 @@ select {
   position: relative;
   z-index: 2;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .meter,
@@ -359,11 +374,15 @@ select {
   color: #ffd35c;
 }
 
+.home-screen .store-summary {
+  margin-top: 0;
+  padding: 10px 12px;
+}
+
 .home-stage {
   position: relative;
-  flex: 1;
-  min-height: 430px;
-  margin-top: 16px;
+  min-height: 0;
+  margin-top: 0;
   border-radius: 8px;
   overflow: hidden;
   background:
@@ -436,15 +455,15 @@ select {
   position: absolute;
   left: 7%;
   right: 7%;
-  bottom: 188px;
+  bottom: 132px;
   display: grid;
   grid-template-columns: 1fr 1.18fr 1fr;
-  gap: 14px;
+  gap: 10px;
   align-items: end;
 }
 
 .street-stalls span {
-  height: 150px;
+  height: 96px;
   border-radius: 8px 8px 4px 4px;
   background:
     linear-gradient(180deg, #efc15e 0 18%, #7b3c33 18% 23%, #4a2e2b 23% 100%);
@@ -452,7 +471,7 @@ select {
 }
 
 .street-stalls span:nth-child(2) {
-  height: 178px;
+  height: 116px;
   background:
     linear-gradient(180deg, #7fcabd 0 15%, #f4efe0 15% 20%, #77463a 20% 100%);
 }
@@ -466,10 +485,10 @@ select {
   position: relative;
   z-index: 2;
   width: min(78%, 510px);
-  margin: 86px auto 0;
+  margin: 74px auto 0;
   border: 5px solid #643222;
   border-radius: 8px;
-  padding: 18px 18px 16px;
+  padding: 14px 18px 13px;
   text-align: center;
   color: #341c10;
   background:
@@ -478,7 +497,7 @@ select {
     inset 0 2px 0 rgba(255, 255, 255, 0.34),
     0 10px 0 #351c18,
     0 20px 28px rgba(0, 0, 0, 0.28);
-  font-size: 42px;
+  font-size: 34px;
   font-weight: 900;
 }
 
@@ -488,7 +507,7 @@ select {
   display: block;
   width: min(62%, 360px);
   min-height: 58px;
-  margin: 28px auto 0;
+  margin: 18px auto 0;
   border: 2px solid rgba(255, 246, 215, 0.72);
   color: #fff7dc;
   background: linear-gradient(180deg, #dd5d45, #9c3b30);
@@ -508,10 +527,12 @@ select {
 
 .home-avatar-display {
   position: absolute;
-  left: 11%;
-  bottom: 186px;
-  max-width: 78%;
-  padding: 10px 12px;
+  z-index: 3;
+  left: 14px;
+  top: 14px;
+  bottom: auto;
+  max-width: min(46%, 280px);
+  padding: 8px 10px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
   background: rgba(12, 17, 23, 0.7);
@@ -524,6 +545,11 @@ select {
   border-radius: 8px;
   object-fit: contain;
   background: rgba(255, 255, 255, 0.08);
+}
+
+.home-avatar-display img {
+  width: 48px;
+  height: 48px;
 }
 
 .avatar-display strong,
@@ -552,9 +578,9 @@ select {
   position: absolute;
   left: 8%;
   right: 8%;
-  bottom: 42px;
+  bottom: 24px;
   z-index: 2;
-  height: 154px;
+  height: 116px;
   border-radius: 8px;
   background:
     linear-gradient(180deg, #b97845 0 18%, #955138 18% 100%);
@@ -567,9 +593,9 @@ select {
 .drink-cup,
 .rice-bowl {
   position: absolute;
-  bottom: 48px;
-  width: 96px;
-  height: 62px;
+  bottom: 32px;
+  width: 84px;
+  height: 54px;
   border-radius: 8px;
 }
 
@@ -580,7 +606,7 @@ select {
 }
 
 .drink-cup {
-  left: calc(50% - 48px);
+  left: calc(50% - 42px);
   background: linear-gradient(180deg, #edf8f4 0 30%, #8fd3c7 30% 100%);
   border: 6px solid #e4f2ee;
 }
@@ -595,7 +621,7 @@ select {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 0;
 }
 
 .bottom-dock {
@@ -1051,6 +1077,37 @@ select {
   margin-top: 14px;
 }
 
+#marketSection,
+#shopSection,
+#outfitSection,
+#equipmentManageSection,
+#personalGrowthSection {
+  min-height: 0;
+  overflow: hidden;
+}
+
+#marketSection:not(.hidden) {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+#shopSection:not(.hidden) {
+  display: grid;
+  grid-template-rows: minmax(170px, 0.8fr) auto minmax(0, 1fr);
+}
+
+#outfitSection:not(.hidden) {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 10px;
+}
+
+#equipmentManageSection:not(.hidden),
+#personalGrowthSection:not(.hidden) {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
 .avatar-row {
   display: grid;
   grid-template-columns: 86px minmax(0, 1fr) auto;
@@ -1077,11 +1134,22 @@ select {
   background: #1b2733;
 }
 
+#marketSection .commercial-street {
+  height: 100%;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
 .commercial-street img {
   display: block;
   width: 100%;
   height: 316px;
   object-fit: cover;
+}
+
+#marketSection .commercial-street img {
+  height: 100%;
+  min-height: 0;
 }
 
 .shop-hotspot {
@@ -1134,6 +1202,40 @@ select {
   background:
     linear-gradient(180deg, rgba(45, 63, 75, 0.92), rgba(30, 25, 29, 0.98)),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 48px, transparent 48px 96px);
+}
+
+#shopSection .shop-interior {
+  min-height: 170px;
+  margin-bottom: 0;
+}
+
+#shopSection .shop-fixture {
+  right: 8%;
+  bottom: 18px;
+  width: 36%;
+  height: 112px;
+}
+
+#shopSection .shopkeeper {
+  left: 7%;
+  bottom: 18px;
+  width: 48%;
+  min-height: 112px;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+}
+
+#shopSection .shopkeeper-face {
+  width: 62px;
+  height: 62px;
+  border-width: 4px;
+}
+
+#shopSection .shopkeeper-bubble {
+  min-height: 56px;
+  padding: 8px;
+  font-size: 13px;
 }
 
 .shop-interior #streetBackButton {
@@ -1237,6 +1339,11 @@ select {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
 }
 
 .upgrade-card {
@@ -1325,7 +1432,8 @@ select {
   }
 
   .home-screen {
-    min-height: calc(100vh - 28px);
+    min-height: 0;
+    gap: 8px;
   }
 
   .home-title {
@@ -1349,7 +1457,7 @@ select {
   }
 
   .home-stage {
-    min-height: 390px;
+    min-height: 0;
   }
 
   .stall-sign {
@@ -1360,22 +1468,23 @@ select {
 
   .play-main-button {
     width: min(78%, 320px);
-    min-height: 54px;
+    min-height: 50px;
+    margin-top: 18px;
   }
 
   .street-stalls {
     left: 6%;
     right: 6%;
-    bottom: 170px;
+    bottom: 132px;
     gap: 8px;
   }
 
   .street-stalls span {
-    height: 116px;
+    height: 92px;
   }
 
   .street-stalls span:nth-child(2) {
-    height: 136px;
+    height: 112px;
   }
 
   .lantern-string {
@@ -1385,10 +1494,27 @@ select {
   }
 
   .home-avatar-display {
-    left: 8%;
-    right: 8%;
-    bottom: 170px;
-    max-width: none;
+    left: 10px;
+    top: 10px;
+    right: auto;
+    bottom: auto;
+    max-width: 48%;
+    gap: 8px;
+    padding: 6px 8px;
+  }
+
+  .home-avatar-display img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .home-avatar-display strong {
+    font-size: 13px;
+  }
+
+  .home-avatar-display span {
+    margin-top: 2px;
+    font-size: 11px;
   }
 
   .customer-lane {
@@ -1413,6 +1539,14 @@ select {
 
   .bottom-dock {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .bottom-dock button {
+    min-height: 48px;
+    padding: 8px;
+    font-size: 14px;
   }
 
   .commercial-street,

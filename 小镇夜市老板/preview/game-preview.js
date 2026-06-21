@@ -123,6 +123,9 @@ const dom = {
   homeStoreEffectText: document.querySelector("#homeStoreEffectText"),
   homeStoreNextText: document.querySelector("#homeStoreNextText"),
   homeStoreHintText: document.querySelector("#homeStoreHintText"),
+  homeAvatarImage: document.querySelector("#homeAvatarImage"),
+  homeAvatarText: document.querySelector("#homeAvatarText"),
+  homeOutfitText: document.querySelector("#homeOutfitText"),
   homeTitleButton: document.querySelector("#homeTitleButton"),
   homeAdminPanel: document.querySelector("#homeAdminPanel"),
   selectMaleAvatarButton: document.querySelector("#selectMaleAvatarButton"),
@@ -1253,6 +1256,7 @@ function renderHome() {
   dom.homeStoreEffectText.textContent = storeStage.mainEffectText;
   dom.homeStoreNextText.textContent = storeStage.nextStageGapText;
   dom.homeStoreHintText.textContent = storeStage.recommendationText ?? "";
+  renderAvatarSummary("home");
   const dailyRewardClaimed = state.saveData.adState.dailyRewardWatchedByDate[getLocalDateKey()] === true;
   dom.dailyAdButton.disabled = dailyRewardClaimed;
   dom.dailyAdButton.textContent = dailyRewardClaimed ? "今日已领取" : "每日广告奖励";
@@ -1849,9 +1853,9 @@ function renderAvatarSummary(target) {
   const activeSets = getActiveCosmeticSets();
   const outfitText = equippedCosmetics.map((item) => item.name).join(" / ") || "未装备装扮";
   const setText = activeSets.length > 0 ? `（${activeSets.map((item) => item.name).join(" / ")}）` : "";
-  const image = target === "upgrade" ? dom.upgradeAvatarImage : null;
-  const nameText = target === "upgrade" ? dom.upgradeAvatarText : null;
-  const outfit = target === "upgrade" ? dom.upgradeOutfitText : null;
+  const image = target === "home" ? dom.homeAvatarImage : target === "upgrade" ? dom.upgradeAvatarImage : null;
+  const nameText = target === "home" ? dom.homeAvatarText : target === "upgrade" ? dom.upgradeAvatarText : null;
+  const outfit = target === "home" ? dom.homeOutfitText : target === "upgrade" ? dom.upgradeOutfitText : null;
 
   if (image) {
     image.src = toResourceUrl(avatar.previewSpritePath || avatar.portraitPath);
