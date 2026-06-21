@@ -502,10 +502,10 @@ function handleInventoryPointerDown(event) {
   }
 
   event.preventDefault();
-  startServeDrag(item.dataset.inventoryDish, event);
+  startServeDrag(item.dataset.inventoryDish, event, item);
 }
 
-function startServeDrag(dishId, event) {
+function startServeDrag(dishId, event, sourceElement) {
   if (state.phase !== "running") {
     addLog("先点击开始营业");
     render();
@@ -527,8 +527,10 @@ function startServeDrag(dishId, event) {
     dishId,
     pointerId: event.pointerId,
     ghost,
+    sourceElement,
     targetElement: null,
   };
+  sourceElement?.setPointerCapture?.(event.pointerId);
   moveServeDragGhost(event.clientX, event.clientY);
 }
 
@@ -566,7 +568,8 @@ function moveServeDragGhost(clientX, clientY) {
     return;
   }
 
-  state.servingDrag.ghost.style.transform = `translate(${clientX + 12}px, ${clientY + 12}px)`;
+  state.servingDrag.ghost.style.left = `${clientX}px`;
+  state.servingDrag.ghost.style.top = `${clientY}px`;
 }
 
 function setServeDropTarget(targetElement) {
@@ -587,6 +590,9 @@ function cancelServeDrag() {
   }
 
   state.servingDrag.targetElement?.classList.remove("drop-target");
+  if (state.servingDrag.sourceElement?.hasPointerCapture?.(state.servingDrag.pointerId)) {
+    state.servingDrag.sourceElement.releasePointerCapture(state.servingDrag.pointerId);
+  }
   state.servingDrag.ghost?.remove();
   state.servingDrag = null;
 }
