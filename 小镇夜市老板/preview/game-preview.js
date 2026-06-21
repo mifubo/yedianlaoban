@@ -106,6 +106,7 @@ const state = {
   growthViewMode: "commercialStreet",
   activeShopId: "outfitShop",
   shopkeeperLineIndex: 0,
+  servingDrag: null,
 };
 
 const dom = {
@@ -144,7 +145,6 @@ const dom = {
   customerLane: document.querySelector("#customerLane"),
   stations: document.querySelector("#stations"),
   inventory: document.querySelector("#inventory"),
-  dishButtons: document.querySelector("#dishButtons"),
   startButton: document.querySelector("#startButton"),
   pauseButton: document.querySelector("#pauseButton"),
   resetButton: document.querySelector("#resetButton"),
@@ -257,9 +257,11 @@ async function boot() {
   dom.shopItemList.addEventListener("click", handleUpgradeClick);
   dom.outfitList.addEventListener("click", handleUpgradeClick);
   dom.personalGrowthList.addEventListener("click", handleUpgradeClick);
-  dom.customerLane.addEventListener("pointerdown", handleCustomerPointerDown);
   dom.stations.addEventListener("pointerdown", handleStationPointerDown);
-  dom.dishButtons.addEventListener("pointerdown", handleDishPointerDown);
+  dom.inventory.addEventListener("pointerdown", handleInventoryPointerDown);
+  window.addEventListener("pointermove", handleServeDragMove);
+  window.addEventListener("pointerup", handleServeDragEnd);
+  window.addEventListener("pointercancel", cancelServeDrag);
 
   showHome();
   requestAnimationFrame(tick);
@@ -418,6 +420,7 @@ function loadLevel(levelId) {
   state.lastResult = null;
   dom.levelSelect.value = String(state.level.id);
   dom.resultOverlay.classList.add("hidden");
+  cancelServeDrag();
   closeLogOverlay();
   dom.logBubbleStack.innerHTML = "";
   addLog(`第 ${state.level.id} 关准备好了`);
@@ -481,17 +484,6 @@ function update(deltaSec) {
   }
 }
 
-function handleCustomerPointerDown(event) {
-  const button = event.target.closest("[data-customer]");
-  if (!button) {
-    return;
-  }
-
-  event.preventDefault();
-  serveCustomer(button.dataset.customer);
-  render();
-}
-
 function handleStationPointerDown(event) {
   const button = event.target.closest("[data-equipment]");
   if (!button) {
@@ -503,15 +495,100 @@ function handleStationPointerDown(event) {
   render();
 }
 
-function handleDishPointerDown(event) {
-  const button = event.target.closest("[data-dish]");
-  if (!button) {
+function handleInventoryPointerDown(event) {
+  const item = event.target.closest("[data-inventory-dish]");
+  if (!item) {
     return;
   }
 
   event.preventDefault();
-  cookDishById(button.dataset.dish);
+  startServeDrag(item.dataset.inventoryDish, event);
+}
+
+function startServeDrag(dishId, event) {
+  if (state.phase !== "running") {
+    addLog("先点击开始营业");
+    render();
+    return;
+  }
+
+  if ((state.cookedInventory[dishId] ?? 0) <= 0) {
+    addLog(`${getDishName(dishId)} 还没出餐`);
+    render();
+    return;
+  }
+
+  cancelServeDrag();
+  const ghost = document.createElement("div");
+  ghost.className = "serve-drag-ghost";
+  ghost.textContent = getDishName(dishId);
+  document.body.appendChild(ghost);
+  state.servingDrag = {
+    dishId,
+    pointerId: event.pointerId,
+    ghost,
+    targetElement: null,
+  };
+  moveServeDragGhost(event.clientX, event.clientY);
+}
+
+function handleServeDragMove(event) {
+  if (!state.servingDrag || state.servingDrag.pointerId !== event.pointerId) {
+    return;
+  }
+
+  event.preventDefault();
+  moveServeDragGhost(event.clientX, event.clientY);
+  setServeDropTarget(document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-customer]") ?? null);
+}
+
+function handleServeDragEnd(event) {
+  if (!state.servingDrag || state.servingDrag.pointerId !== event.pointerId) {
+    return;
+  }
+
+  event.preventDefault();
+  const dishId = state.servingDrag.dishId;
+  const target = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-customer]") ?? null;
+  cancelServeDrag();
+  if (!target) {
+    addLog("把菜拖到顾客卡片上菜");
+    render();
+    return;
+  }
+
+  serveDishToCustomer(target.dataset.customer, dishId);
   render();
+}
+
+function moveServeDragGhost(clientX, clientY) {
+  if (!state.servingDrag?.ghost) {
+    return;
+  }
+
+  state.servingDrag.ghost.style.transform = `translate(${clientX + 12}px, ${clientY + 12}px)`;
+}
+
+function setServeDropTarget(targetElement) {
+  if (state.servingDrag?.targetElement === targetElement) {
+    return;
+  }
+
+  state.servingDrag?.targetElement?.classList.remove("drop-target");
+  targetElement?.classList.add("drop-target");
+  if (state.servingDrag) {
+    state.servingDrag.targetElement = targetElement;
+  }
+}
+
+function cancelServeDrag() {
+  if (!state.servingDrag) {
+    return;
+  }
+
+  state.servingDrag.targetElement?.classList.remove("drop-target");
+  state.servingDrag.ghost?.remove();
+  state.servingDrag = null;
 }
 
 function buildRuntimeEquipments() {
@@ -638,6 +715,7 @@ function spawnDueCustomers() {
       configId: customerConfig.id,
       name: customerConfig.name,
       orderDishIds: spawnItem.orderDishIds,
+      servedDishIds: [],
       maxPatienceSec,
       patienceRemainingSec: maxPatienceSec,
     });
@@ -701,29 +779,8 @@ function cookByEquipmentId(equipmentId) {
   const dishId = pickNextDishForEquipment(equipmentId);
   if (!dishId) {
     if (state.level.id >= 11) {
-      addLog("当前没有明确缺口，点击具体菜品手动备菜");
+      addLog("当前没有明确缺口，先观察顾客订单");
     }
-    return false;
-  }
-
-  return startCooking(equipment, slot, dishId);
-}
-
-function cookDishById(dishId) {
-  if (state.phase !== "running") {
-    addLog("先点击开始营业");
-    return false;
-  }
-
-  if (!state.level.dishPool.includes(dishId)) {
-    return false;
-  }
-
-  const dish = state.configs.dishById.get(dishId);
-  const equipment = state.equipments.find((item) => item.configId === dish.stationId);
-  const slot = equipment?.slots.find((item) => item.status === "idle");
-  if (!equipment || !slot) {
-    addLog("设备正在忙");
     return false;
   }
 
@@ -745,7 +802,7 @@ function startCooking(equipment, slot, dishId) {
   return true;
 }
 
-function serveCustomer(runtimeId) {
+function serveDishToCustomer(runtimeId, dishId) {
   if (state.phase !== "running") {
     return false;
   }
@@ -755,18 +812,31 @@ function serveCustomer(runtimeId) {
     return false;
   }
 
-  if (!hasCookedDishes(customer.orderDishIds)) {
+  if ((state.cookedInventory[dishId] ?? 0) <= 0) {
+    addLog(`${getDishName(dishId)} 已经没有了`);
+    return false;
+  }
+
+  if (!isDishStillNeeded(customer, dishId)) {
+    state.cookedInventory[dishId] = Math.max(0, (state.cookedInventory[dishId] ?? 0) - 1);
     state.wrongServeCount += 1;
     state.combo = 0;
     const penalty = calculateWrongServePenalty();
     state.earnedCoins = Math.max(0, state.earnedCoins - penalty);
     state.complaintPenaltyCoins += penalty;
     customer.patienceRemainingSec = Math.max(0, customer.patienceRemainingSec - 2);
-    addLog(`菜还没齐，上菜失败${penalty > 0 ? `，客诉 -${penalty}` : ""}`);
+    addLog(`上错了 ${getDishName(dishId)}${penalty > 0 ? `，客诉 -${penalty}` : ""}`);
     return false;
   }
 
-  consumeCookedDishes(customer.orderDishIds);
+  state.cookedInventory[dishId] = Math.max(0, (state.cookedInventory[dishId] ?? 0) - 1);
+  customer.servedDishIds.push(dishId);
+  const remainingDishIds = getRemainingOrderDishIds(customer);
+  if (remainingDishIds.length > 0) {
+    addLog(`${customer.name} 收到 ${getDishName(dishId)}，还差 ${formatDishList(remainingDishIds)}`);
+    return true;
+  }
+
   const rewardCoins = calculateCustomerReward(customer);
   state.earnedCoins += rewardCoins;
   state.servedCustomers += 1;
@@ -785,16 +855,20 @@ function serveCustomer(runtimeId) {
   return true;
 }
 
-function hasCookedDishes(orderDishIds) {
-  const requiredCounts = countDishIds(orderDishIds);
-  return Object.entries(requiredCounts).every(([dishId, count]) => (state.cookedInventory[dishId] ?? 0) >= count);
+function isDishStillNeeded(customer, dishId) {
+  return getRemainingOrderDishIds(customer).includes(dishId);
 }
 
-function consumeCookedDishes(orderDishIds) {
-  const requiredCounts = countDishIds(orderDishIds);
-  for (const [dishId, count] of Object.entries(requiredCounts)) {
-    state.cookedInventory[dishId] = Math.max(0, (state.cookedInventory[dishId] ?? 0) - count);
-  }
+function getRemainingOrderDishIds(customer) {
+  const servedCounts = countDishIds(customer.servedDishIds ?? []);
+  return customer.orderDishIds.filter((orderDishId) => {
+    const servedCount = servedCounts[orderDishId] ?? 0;
+    if (servedCount <= 0) {
+      return true;
+    }
+    servedCounts[orderDishId] = servedCount - 1;
+    return false;
+  });
 }
 
 function calculateCustomerReward(customer) {
@@ -828,7 +902,7 @@ function pickNextDishForEquipment(equipmentId) {
 
 function getWaitingDemandCount(dishId) {
   return state.activeCustomers.reduce((sum, customer) => {
-    return sum + customer.orderDishIds.filter((orderDishId) => orderDishId === dishId).length;
+    return sum + getRemainingOrderDishIds(customer).filter((orderDishId) => orderDishId === dishId).length;
   }, 0);
 }
 
@@ -1195,7 +1269,6 @@ function render() {
   renderCustomers();
   renderStations();
   renderInventory();
-  renderDishButtons();
   renderLog();
 }
 
@@ -1213,14 +1286,16 @@ function renderCustomers() {
     const customerConfig = state.configs.customerById.get(customer.configId);
     const traitLabels = getCustomerTraitLabels(customerConfig);
     const className = traitLabels.includes("急") ? "customer rush" : "customer";
+    const remainingDishIds = getRemainingOrderDishIds(customer);
     slots.push(`
-      <button class="${className}" type="button" data-customer="${customer.runtimeId}">
+      <div class="${className}" data-customer="${customer.runtimeId}">
         <div class="face"></div>
         <div class="customer-name">${customer.name}</div>
         <div class="trait-tags">${traitLabels.map((label) => `<span>${label}</span>`).join("")}</div>
-        <div class="orders">${customer.orderDishIds.map((dishId) => `<span class="chip">${getDishName(dishId)}</span>`).join("")}</div>
+        <div class="orders order-text">要 ${formatDishList(remainingDishIds)}</div>
+        <div class="drop-copy">拖出餐台上菜</div>
         <div class="patience"><div class="patience-fill" style="transform: scaleX(${Math.max(0, patienceRatio)})"></div></div>
-      </button>
+      </div>
     `);
   }
 
@@ -1239,7 +1314,7 @@ function renderStations() {
         state.level.id >= 11
           ? recommendedDishId
             ? `补${getDishName(recommendedDishId)}缺口`
-            : "点菜品备菜"
+            : "等订单缺口"
           : "制作需求菜";
       const slots = equipment.slots
         .map((slot) => {
@@ -1272,22 +1347,12 @@ function renderInventory() {
       const count = state.cookedInventory[dishId] ?? 0;
       const riskCoins = calculateDishLeftoverRisk(dishId, count, lossRate);
       return `
-        <div class="inventory-item">
-          <span>${getDishName(dishId)}<em>${lossRate > 0 && count > 0 ? `风险 -${riskCoins}` : "无损耗"}</em></span>
+        <div class="inventory-item ${count > 0 ? "ready" : "empty"}" data-inventory-dish="${dishId}">
+          <span>${getDishName(dishId)}<em>${count > 0 ? "拖给顾客" : lossRate > 0 ? "待出餐" : "无库存"}</em></span>
           <strong>${count}/${limit}</strong>
+          ${lossRate > 0 && count > 0 ? `<em class="risk-text">风险 -${riskCoins}</em>` : ""}
         </div>
       `;
-    })
-    .join("");
-}
-
-function renderDishButtons() {
-  dom.dishButtons.innerHTML = state.level.dishPool
-    .map((dishId) => {
-      const dish = state.configs.dishById.get(dishId);
-      const equipment = state.equipments.find((item) => item.configId === dish.stationId);
-      const canCook = state.phase === "running" && equipment?.slots.some((slot) => slot.status === "idle") && !isDishAtPreparedLimit(dishId);
-      return `<button type="button" data-dish="${dishId}" ${canCook ? "" : "disabled"}>${dish.name}<br>${getCookDurationSec(dish).toFixed(1)}s · ${getSupplyCount(dishId)}/${getPreparedDishLimit()}</button>`;
     })
     .join("");
 }
@@ -2837,6 +2902,13 @@ function countDishIds(dishIds) {
     counts[dishId] = (counts[dishId] ?? 0) + 1;
     return counts;
   }, {});
+}
+
+function formatDishList(dishIds) {
+  const counts = countDishIds(dishIds);
+  return Object.entries(counts)
+    .map(([dishId, count]) => `${getDishName(dishId)}${count > 1 ? `x${count}` : ""}`)
+    .join(" + ");
 }
 
 function getDishName(dishId) {
