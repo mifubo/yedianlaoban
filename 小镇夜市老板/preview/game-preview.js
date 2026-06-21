@@ -134,6 +134,7 @@ const dom = {
   dailyAdButton: document.querySelector("#dailyAdButton"),
   homeUpgradeButton: document.querySelector("#homeUpgradeButton"),
   clearSaveButton: document.querySelector("#clearSaveButton"),
+  businessLogButton: document.querySelector("#businessLogButton"),
   gameHomeButton: document.querySelector("#gameHomeButton"),
   levelSelect: document.querySelector("#levelSelect"),
   timeText: document.querySelector("#timeText"),
@@ -147,6 +148,9 @@ const dom = {
   startButton: document.querySelector("#startButton"),
   pauseButton: document.querySelector("#pauseButton"),
   resetButton: document.querySelector("#resetButton"),
+  logOverlay: document.querySelector("#logOverlay"),
+  closeLogButton: document.querySelector("#closeLogButton"),
+  logBubbleStack: document.querySelector("#logBubbleStack"),
   logList: document.querySelector("#logList"),
   upgradeBackButton: document.querySelector("#upgradeBackButton"),
   upgradeKicker: document.querySelector("#upgradeKicker"),
@@ -231,6 +235,8 @@ async function boot() {
   dom.homeEquipmentButton.addEventListener("click", () => showUpgrade("equipmentManagement"));
   dom.homeGrowthButton.addEventListener("click", () => showUpgrade("personalGrowth"));
   dom.clearSaveButton.addEventListener("click", clearSaveAndRefresh);
+  dom.businessLogButton.addEventListener("click", openLogOverlay);
+  dom.closeLogButton.addEventListener("click", closeLogOverlay);
   dom.gameHomeButton.addEventListener("click", showHome);
   dom.levelSelect.addEventListener("change", () => enterLevel(Number(dom.levelSelect.value)));
   dom.startButton.addEventListener("click", startBusiness);
@@ -366,6 +372,15 @@ function setHomeAdminPanel(isOpen) {
   dom.homeTitleButton.setAttribute("aria-expanded", String(isOpen));
 }
 
+function openLogOverlay() {
+  renderLog();
+  dom.logOverlay.classList.remove("hidden");
+}
+
+function closeLogOverlay() {
+  dom.logOverlay.classList.add("hidden");
+}
+
 function normalizeGrowthViewMode(mode) {
   return ["commercialStreet", "shop", "outfit", "equipmentManagement", "personalGrowth"].includes(mode)
     ? mode
@@ -403,6 +418,8 @@ function loadLevel(levelId) {
   state.lastResult = null;
   dom.levelSelect.value = String(state.level.id);
   dom.resultOverlay.classList.add("hidden");
+  closeLogOverlay();
+  dom.logBubbleStack.innerHTML = "";
   addLog(`第 ${state.level.id} 关准备好了`);
   render();
 }
@@ -2755,8 +2772,30 @@ function roundTo10(value) {
 }
 
 function addLog(message) {
-  state.logLines.unshift(decorateLogMessage(message));
+  const line = decorateLogMessage(message);
+  state.logLines.unshift(line);
   state.logLines = state.logLines.slice(0, 32);
+  showLogBubble(line);
+}
+
+function showLogBubble(line) {
+  if (!dom.logBubbleStack) {
+    return;
+  }
+
+  const bubble = document.createElement("div");
+  bubble.className = "log-bubble";
+  bubble.textContent = line;
+  dom.logBubbleStack.prepend(bubble);
+
+  const bubbles = Array.from(dom.logBubbleStack.querySelectorAll(".log-bubble"));
+  for (const staleBubble of bubbles.slice(3)) {
+    staleBubble.remove();
+  }
+
+  window.setTimeout(() => {
+    bubble.remove();
+  }, 3600);
 }
 
 function decorateLogMessage(message) {

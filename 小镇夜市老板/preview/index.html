@@ -120,6 +120,7 @@
             <h1>小镇夜市老板</h1>
           </div>
           <div class="top-actions">
+            <button id="businessLogButton" class="small-button secondary-button" type="button">经营</button>
             <button id="gameHomeButton" class="small-button" type="button">首页</button>
             <select id="levelSelect" aria-label="选择关卡"></select>
           </div>
@@ -146,10 +147,7 @@
 
         <section class="street">
           <div class="awning"></div>
-          <section class="log street-log" aria-label="营业记录">
-            <div class="panel-title">营业记录</div>
-            <div id="logList" class="log-list"></div>
-          </section>
+          <div id="logBubbleStack" class="log-bubble-stack" aria-live="polite"></div>
           <div id="customerLane" class="customer-lane"></div>
         </section>
 
@@ -176,6 +174,18 @@
           <button id="resetButton" type="button">重开本关</button>
         </section>
 
+        <section id="logOverlay" class="log-overlay hidden" aria-label="全部营业记录">
+          <div class="log-dialog">
+            <div class="log-dialog-head">
+              <div>
+                <div class="panel-title">营业记录</div>
+                <p>最近 32 条</p>
+              </div>
+              <button id="closeLogButton" class="small-button" type="button">返回</button>
+            </div>
+            <div id="logList" class="log-list full-log-list"></div>
+          </div>
+        </section>
       </section>
 
       <section id="upgradeView" class="view hidden">
