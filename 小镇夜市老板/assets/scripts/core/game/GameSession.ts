@@ -7,6 +7,7 @@ export interface LevelResult {
   levelId: LevelId;
   outcome: LevelOutcome;
   earnedCoins: number;
+  netProfitCoins: number;
   baseRewardCoins: number;
   finalRewardCoins: number;
   settlementAdBonusCoins: number;
@@ -14,6 +15,9 @@ export interface LevelResult {
   maxCombo: number;
   angryLeaveCount: number;
   wrongServeCount: number;
+  complaintPenaltyCoins: number;
+  leftoverLossCoins: number;
+  remainingDishCount: number;
   stars: number;
   rewardClaimed: boolean;
   canWatchSettlementBonusAd: boolean;
@@ -28,6 +32,9 @@ export interface BuildLevelResultOptions {
   maxCombo: number;
   angryLeaveCount?: number;
   wrongServeCount?: number;
+  complaintPenaltyCoins?: number;
+  leftoverLossCoins?: number;
+  remainingDishCount?: number;
 }
 
 export function calculateStars(level: LevelConfig, earnedCoins: number): number {
@@ -56,6 +63,7 @@ export function buildLevelResult(options: BuildLevelResultOptions): LevelResult 
     levelId: options.level.id,
     outcome: options.outcome,
     earnedCoins: options.earnedCoins,
+    netProfitCoins: options.earnedCoins,
     baseRewardCoins,
     finalRewardCoins: baseRewardCoins,
     settlementAdBonusCoins,
@@ -63,6 +71,9 @@ export function buildLevelResult(options: BuildLevelResultOptions): LevelResult 
     maxCombo: options.maxCombo,
     angryLeaveCount: options.angryLeaveCount ?? 0,
     wrongServeCount: options.wrongServeCount ?? 0,
+    complaintPenaltyCoins: options.complaintPenaltyCoins ?? 0,
+    leftoverLossCoins: options.leftoverLossCoins ?? 0,
+    remainingDishCount: options.remainingDishCount ?? 0,
     stars,
     rewardClaimed: false,
     canWatchSettlementBonusAd: options.outcome === 'success' && settlementAdBonusCoins > 0,

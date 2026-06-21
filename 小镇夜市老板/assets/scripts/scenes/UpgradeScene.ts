@@ -9,10 +9,12 @@ import {
   EquipmentId,
   RuntimeConfig,
   StoreUpgradeId,
+  StoreVisualStageSummary,
 } from '../core/config/types';
 import { GameContext, GrowthViewMode } from '../core/game/GameContext';
 import { SceneName } from '../core/game/SceneNames';
 import { PlayerSaveData, SaveSystem } from '../core/save/SaveSystem';
+import { EconomySystem } from '../systems/EconomySystem';
 import { UpgradePreview, UpgradeSystem } from '../systems/UpgradeSystem';
 
 const { ccclass, property } = _decorator;
@@ -45,6 +47,7 @@ export interface UpgradeSceneSnapshot {
   dishes: UpgradePreview[];
   storeUpgrades: UpgradePreview[];
   cosmetics: UpgradePreview[];
+  storeStage: StoreVisualStageSummary;
 }
 
 @ccclass('UpgradeScene')
@@ -54,6 +57,18 @@ export class UpgradeScene extends Component {
 
   @property(Label)
   equippedCosmeticsLabel: Label | null = null;
+
+  @property(Label)
+  storeStageLabel: Label | null = null;
+
+  @property(Label)
+  storeEffectLabel: Label | null = null;
+
+  @property(Label)
+  storeNextStageLabel: Label | null = null;
+
+  @property(Label)
+  storeUpgradeHintLabel: Label | null = null;
 
   private configs: RuntimeConfig | null = null;
   private saveData: PlayerSaveData | null = null;
@@ -256,6 +271,7 @@ export class UpgradeScene extends Component {
         .sort((a, b) => a.unlockLevel - b.unlockLevel)
         .map((cosmetic) => this.upgradeSystem?.previewCosmetic(cosmetic))
         .filter((preview): preview is UpgradePreview => preview !== undefined),
+      storeStage: EconomySystem.getStoreVisualStageSummary(this.configs, this.saveData, this.saveData.currentLevelId),
     };
   }
 
@@ -285,6 +301,22 @@ export class UpgradeScene extends Component {
       const outfitText = snapshot.equippedCosmetics.map((item) => item.name).join(' / ') || '未装备装扮';
       const setText = snapshot.activeCosmeticSets.length > 0 ? `（${snapshot.activeCosmeticSets.join(' / ')}）` : '';
       this.equippedCosmeticsLabel.string = `${outfitText}${setText}`;
+    }
+
+    if (this.storeStageLabel) {
+      this.storeStageLabel.string = `Lv.${snapshot.storeStage.level} ${snapshot.storeStage.name}`;
+    }
+
+    if (this.storeEffectLabel) {
+      this.storeEffectLabel.string = snapshot.storeStage.mainEffectText;
+    }
+
+    if (this.storeNextStageLabel) {
+      this.storeNextStageLabel.string = snapshot.storeStage.nextStageGapText;
+    }
+
+    if (this.storeUpgradeHintLabel) {
+      this.storeUpgradeHintLabel.string = snapshot.storeStage.recommendationText ?? '';
     }
   }
 

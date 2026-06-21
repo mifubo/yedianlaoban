@@ -1,10 +1,10 @@
 const CONFIG_PATHS = {
-  levels: "../assets/resources/configs/levels_mvp.json",
-  dishes: "../assets/resources/configs/dishes.json",
-  customers: "../assets/resources/configs/customers.json",
-  equipments: "../assets/resources/configs/equipments.json",
-  storeUpgrades: "../assets/resources/configs/store_upgrades.json",
-  cosmetics: "../assets/resources/configs/cosmetics.json",
+  levels: "/assets/resources/configs/levels_mvp.json",
+  dishes: "/assets/resources/configs/dishes.json",
+  customers: "/assets/resources/configs/customers.json",
+  equipments: "/assets/resources/configs/equipments.json",
+  storeUpgrades: "/assets/resources/configs/store_upgrades.json",
+  cosmetics: "/assets/resources/configs/cosmetics.json",
 };
 
 const SAVE_KEY = "town_night_market_boss_preview_save_v3";
@@ -21,6 +21,20 @@ const EQUIPMENT_SLOT_LEVEL_STEP = 2;
 const SETTLEMENT_AD_BONUS_RATE = 0.5;
 const SETTLEMENT_AD_GOAL_CAP_RATE = 0.6;
 const FAIL_EXTEND_SECONDS = 15;
+const DEFAULT_MAX_WAITING_CUSTOMERS = 4;
+const DEFAULT_PREP_CACHE_LIMIT = 3;
+const FRONT30_CUSTOMER_ATTRACT_CAP = 0.15;
+const LATE_CUSTOMER_ATTRACT_CAP = 0.25;
+const MIDGAME_LEFTOVER_LOSS_RATE = 0.4;
+const LATEGAME_LEFTOVER_LOSS_RATE = 0.6;
+const MAX_LEFTOVER_LOSS_REDUCE = 0.65;
+const STORE_VISUAL_STAGES = [
+  { level: 1, name: "破旧推车", minUpgradeProgress: 0 },
+  { level: 2, name: "亮灯小摊", minUpgradeProgress: 4 },
+  { level: 3, name: "夜市摊位", minUpgradeProgress: 9 },
+  { level: 4, name: "老街档口", minUpgradeProgress: 16 },
+  { level: 5, name: "网红夜市摊", minUpgradeProgress: 25 },
+];
 
 const DEFAULT_SAVE_DATA = {
   schemaVersion: 3,
@@ -47,6 +61,8 @@ const DEFAULT_SAVE_DATA = {
     store_tables: 1,
     store_fridge: 1,
     store_cleanliness: 1,
+    store_prep_table: 1,
+    store_facade: 1,
   },
   ownedCosmeticIds: [],
   equippedCosmeticIds: {},
@@ -74,6 +90,7 @@ const state = {
   servedCustomers: 0,
   angryLeaveCount: 0,
   wrongServeCount: 0,
+  complaintPenaltyCoins: 0,
   combo: 0,
   maxCombo: 0,
   customerSerial: 0,
@@ -92,6 +109,7 @@ const state = {
 };
 
 const dom = {
+  loadingView: document.querySelector("#loadingView"),
   avatarSelectView: document.querySelector("#avatarSelectView"),
   homeView: document.querySelector("#homeView"),
   gameView: document.querySelector("#gameView"),
@@ -100,6 +118,10 @@ const dom = {
   homeCoinText: document.querySelector("#homeCoinText"),
   homeStarText: document.querySelector("#homeStarText"),
   homeProgressText: document.querySelector("#homeProgressText"),
+  homeStoreStageText: document.querySelector("#homeStoreStageText"),
+  homeStoreEffectText: document.querySelector("#homeStoreEffectText"),
+  homeStoreNextText: document.querySelector("#homeStoreNextText"),
+  homeStoreHintText: document.querySelector("#homeStoreHintText"),
   homeTitleButton: document.querySelector("#homeTitleButton"),
   homeAdminPanel: document.querySelector("#homeAdminPanel"),
   selectMaleAvatarButton: document.querySelector("#selectMaleAvatarButton"),
@@ -133,6 +155,10 @@ const dom = {
   upgradeLevelMeter: document.querySelector("#upgradeLevelMeter"),
   upgradeCoinText: document.querySelector("#upgradeCoinText"),
   upgradeLevelText: document.querySelector("#upgradeLevelText"),
+  upgradeStoreStageText: document.querySelector("#upgradeStoreStageText"),
+  upgradeStoreEffectText: document.querySelector("#upgradeStoreEffectText"),
+  upgradeStoreNextText: document.querySelector("#upgradeStoreNextText"),
+  upgradeStoreHintText: document.querySelector("#upgradeStoreHintText"),
   outfitSection: document.querySelector("#outfitSection"),
   upgradeAvatarImage: document.querySelector("#upgradeAvatarImage"),
   upgradeAvatarText: document.querySelector("#upgradeAvatarText"),
@@ -163,14 +189,12 @@ const dom = {
 };
 
 async function boot() {
-  const [levels, dishes, customers, equipments, storeUpgrades, cosmeticsRaw] = await Promise.all([
-    loadJson(CONFIG_PATHS.levels),
-    loadJson(CONFIG_PATHS.dishes),
-    loadJson(CONFIG_PATHS.customers),
-    loadJson(CONFIG_PATHS.equipments),
-    loadJson(CONFIG_PATHS.storeUpgrades),
-    loadJson(CONFIG_PATHS.cosmetics),
-  ]);
+  const levels = await loadJson(CONFIG_PATHS.levels);
+  const dishes = await loadJson(CONFIG_PATHS.dishes);
+  const customers = await loadJson(CONFIG_PATHS.customers);
+  const equipments = await loadJson(CONFIG_PATHS.equipments);
+  const storeUpgrades = await loadJson(CONFIG_PATHS.storeUpgrades);
+  const cosmeticsRaw = await loadJson(CONFIG_PATHS.cosmetics);
   const cosmeticsConfig = normalizeCosmeticsConfig(cosmeticsRaw);
 
   state.configs = {
@@ -244,25 +268,39 @@ async function boot() {
   };
 }
 
-function loadJson(path) {
+function loadJson(path, attempt = 1) {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
-    request.open("GET", path, true);
+    const url = `${path}${path.includes("?") ? "&" : "?"}v=${Date.now()}-${attempt}`;
+    request.open("GET", url, true);
+    request.timeout = 15000;
     request.onload = () => {
       if (request.status < 200 || request.status >= 300) {
-        reject(new Error(`HTTP ${request.status}: ${path}`));
+        retryOrReject(path, attempt, resolve, reject, new Error(`HTTP ${request.status}: ${path}`));
         return;
       }
 
       try {
         resolve(JSON.parse(request.responseText));
       } catch (error) {
-        reject(error);
+        retryOrReject(path, attempt, resolve, reject, error);
       }
     };
-    request.onerror = () => reject(new Error(`Cannot load ${path}`));
+    request.onerror = () => retryOrReject(path, attempt, resolve, reject, new Error(`Cannot load ${path}`));
+    request.ontimeout = () => retryOrReject(path, attempt, resolve, reject, new Error(`Timeout loading ${path}`));
     request.send();
   });
+}
+
+function retryOrReject(path, attempt, resolve, reject, error) {
+  if (attempt < 3) {
+    window.setTimeout(() => {
+      loadJson(path, attempt + 1).then(resolve, reject);
+    }, 300 * attempt);
+    return;
+  }
+
+  reject(error);
 }
 
 function normalizeCosmeticsConfig(raw) {
@@ -312,6 +350,7 @@ function showUpgrade(mode = "commercialStreet") {
 }
 
 function showView(name) {
+  dom.loadingView.classList.toggle("hidden", name !== "loading");
   dom.avatarSelectView.classList.toggle("hidden", name !== "avatarSelect");
   dom.homeView.classList.toggle("hidden", name !== "home");
   dom.gameView.classList.toggle("hidden", name !== "game");
@@ -350,6 +389,7 @@ function loadLevel(levelId) {
   state.servedCustomers = 0;
   state.angryLeaveCount = 0;
   state.wrongServeCount = 0;
+  state.complaintPenaltyCoins = 0;
   state.combo = 0;
   state.maxCombo = 0;
   state.customerSerial = 0;
@@ -483,7 +523,7 @@ function buildRuntimeEquipments() {
 }
 
 function buildSpawnQueue() {
-  const totalCustomers = state.level.modifiers.customerCount;
+  const totalCustomers = getEffectiveCustomerCount(state.level);
   const waveCount = Math.max(1, state.level.modifiers.waveCount ?? 1);
   const spawnWindowSec = Math.max(1, state.level.durationSec * 0.72);
   const items = [];
@@ -506,7 +546,35 @@ function buildSpawnQueue() {
   }
 
   ensureTargetDishOrders(items);
+  applyEventSpawnTiming(items);
   return items.sort((a, b) => a.spawnAtSec - b.spawnAtSec);
+}
+
+function applyEventSpawnTiming(items) {
+  if (!state.level || items.length <= 1) {
+    return;
+  }
+
+  const eventId = state.level.modifiers.eventId;
+  if (eventId !== "event_influencer_visit" && eventId !== "event_school_rush") {
+    return;
+  }
+
+  const sortedItems = items.sort((a, b) => a.spawnAtSec - b.spawnAtSec);
+  const frontShare = eventId === "event_influencer_visit" ? 0.38 : 0.45;
+  const frontWindowSec = Math.min(eventId === "event_influencer_visit" ? 30 : 34, state.level.durationSec * 0.42);
+  const frontCount = Math.max(1, Math.ceil(sortedItems.length * frontShare));
+
+  for (let index = 0; index < sortedItems.length; index += 1) {
+    const item = sortedItems[index];
+    if (index < frontCount) {
+      const spacingSec = frontCount <= 1 ? 0 : frontWindowSec / frontCount;
+      const jitterSec = index === 0 ? 0 : (random() - 0.5) * 0.8;
+      item.spawnAtSec = Math.max(0, index * spacingSec + jitterSec);
+    } else {
+      item.spawnAtSec = Math.max(frontWindowSec, item.spawnAtSec);
+    }
+  }
 }
 
 function getWaveCustomerCount(totalCustomers, waveCount, waveIndex) {
@@ -542,7 +610,7 @@ function spawnDueCustomers() {
   while (
     state.spawnQueue.length > 0 &&
     state.spawnQueue[0].spawnAtSec <= state.elapsedSec &&
-    state.activeCustomers.length < 4
+    state.activeCustomers.length < getMaxWaitingCustomers()
   ) {
     const spawnItem = state.spawnQueue.shift();
     const customerConfig = state.configs.customerById.get(spawnItem.customerId);
@@ -569,7 +637,7 @@ function updateCooking(deltaSec) {
 
       slot.timeRemainingSec = Math.max(0, slot.timeRemainingSec - deltaSec);
       if (slot.timeRemainingSec <= 0) {
-        state.cookedInventory[slot.dishId] = (state.cookedInventory[slot.dishId] ?? 0) + 1;
+        state.cookedInventory[slot.dishId] = Math.min(getPreparedDishLimit(), (state.cookedInventory[slot.dishId] ?? 0) + 1);
         addLog(`${getDishName(slot.dishId)} 做好了`);
         slot.status = "idle";
         slot.dishId = null;
@@ -593,6 +661,7 @@ function updateCustomerPatience(deltaSec) {
     state.combo = 0;
     const penalty = calculateAngryLeavePenalty();
     state.earnedCoins = Math.max(0, state.earnedCoins - penalty);
+    state.complaintPenaltyCoins += penalty;
     state.activeCustomers = state.activeCustomers.filter((item) => item.runtimeId !== customer.runtimeId);
     addLog(`${customer.name} 等急走了${penalty > 0 ? `，客诉 -${penalty}` : ""}`);
     spawnDueCustomers();
@@ -614,11 +683,13 @@ function cookByEquipmentId(equipmentId) {
 
   const dishId = pickNextDishForEquipment(equipmentId);
   if (!dishId) {
+    if (state.level.id >= 11) {
+      addLog("当前没有明确缺口，点击具体菜品手动备菜");
+    }
     return false;
   }
 
-  startCooking(equipment, slot, dishId);
-  return true;
+  return startCooking(equipment, slot, dishId);
 }
 
 function cookDishById(dishId) {
@@ -639,17 +710,22 @@ function cookDishById(dishId) {
     return false;
   }
 
-  startCooking(equipment, slot, dishId);
-  return true;
+  return startCooking(equipment, slot, dishId);
 }
 
 function startCooking(equipment, slot, dishId) {
   const dish = state.configs.dishById.get(dishId);
+  if (isDishAtPreparedLimit(dishId)) {
+    addLog(`${dish.name} 已到备菜上限`);
+    return false;
+  }
+
   slot.status = "cooking";
   slot.dishId = dishId;
   slot.totalCookTimeSec = getCookDurationSec(dish);
   slot.timeRemainingSec = slot.totalCookTimeSec;
   addLog(`${equipment.name} 开始做 ${dish.name}`);
+  return true;
 }
 
 function serveCustomer(runtimeId) {
@@ -667,6 +743,7 @@ function serveCustomer(runtimeId) {
     state.combo = 0;
     const penalty = calculateWrongServePenalty();
     state.earnedCoins = Math.max(0, state.earnedCoins - penalty);
+    state.complaintPenaltyCoins += penalty;
     customer.patienceRemainingSec = Math.max(0, customer.patienceRemainingSec - 2);
     addLog(`菜还没齐，上菜失败${penalty > 0 ? `，客诉 -${penalty}` : ""}`);
     return false;
@@ -712,7 +789,7 @@ function calculateCustomerReward(customer) {
 
 function pickNextDishForEquipment(equipmentId) {
   const cookableDishIds = state.level.dishPool.filter((dishId) => {
-    return state.configs.dishById.get(dishId).stationId === equipmentId;
+    return state.configs.dishById.get(dishId).stationId === equipmentId && !isDishAtPreparedLimit(dishId);
   });
 
   let bestDishId = null;
@@ -725,7 +802,11 @@ function pickNextDishForEquipment(equipmentId) {
     }
   }
 
-  return bestDishId ?? cookableDishIds[0] ?? null;
+  if (bestDemand > 0) {
+    return bestDishId;
+  }
+
+  return state.level.id <= 10 ? (cookableDishIds[0] ?? null) : null;
 }
 
 function getWaitingDemandCount(dishId) {
@@ -740,6 +821,10 @@ function getSupplyCount(dishId) {
     return sum + equipment.slots.filter((slot) => slot.dishId === dishId).length;
   }, 0);
   return cooked + cooking;
+}
+
+function isDishAtPreparedLimit(dishId) {
+  return getSupplyCount(dishId) >= getPreparedDishLimit();
 }
 
 function generateOrder(customer) {
@@ -820,20 +905,26 @@ function endBusiness() {
     return;
   }
 
-  const success = hasMetMainGoal();
+  const leftoverLoss = calculateLeftoverLoss();
+  const netProfitCoins = Math.max(0, state.earnedCoins - leftoverLoss.lossCoins);
+  const success = hasMetMainGoal(netProfitCoins);
   state.phase = "ended";
   state.lastResult = {
     levelId: state.level.id,
     outcome: success ? "success" : "fail",
-    earnedCoins: state.earnedCoins,
-    baseRewardCoins: Math.max(0, state.earnedCoins),
-    finalRewardCoins: Math.max(0, state.earnedCoins),
-    settlementAdBonusCoins: success ? calculateSettlementAdBonus(state.level, Math.max(0, state.earnedCoins)) : 0,
+    earnedCoins: netProfitCoins,
+    netProfitCoins,
+    baseRewardCoins: netProfitCoins,
+    finalRewardCoins: netProfitCoins,
+    settlementAdBonusCoins: success ? calculateSettlementAdBonus(state.level, netProfitCoins) : 0,
     servedCustomers: state.servedCustomers,
     maxCombo: state.maxCombo,
     angryLeaveCount: state.angryLeaveCount,
     wrongServeCount: state.wrongServeCount,
-    stars: success ? calculateStars() : 0,
+    complaintPenaltyCoins: state.complaintPenaltyCoins,
+    leftoverLossCoins: leftoverLoss.lossCoins,
+    remainingDishCount: leftoverLoss.remainingDishCount,
+    stars: success ? calculateStars(netProfitCoins) : 0,
     rewardClaimed: false,
     canWatchSettlementBonusAd: false,
     canWatchExtendTimeAd: !success && canResumeFailedLevel(),
@@ -866,7 +957,10 @@ function renderResultDialog() {
       : null;
 
   dom.resultStats.innerHTML = [
-    `金币：${state.earnedCoins} / ${state.level.goals.coin1}`,
+    `营业金币：${state.earnedCoins}`,
+    `剩菜损耗：-${result.leftoverLossCoins}`,
+    `客诉扣款：-${result.complaintPenaltyCoins}`,
+    `净利润：${result.netProfitCoins} / ${state.level.goals.coin1}`,
     `服务：${state.servedCustomers} 人`,
     `最大连击：${state.maxCombo}`,
     `超时离开：${state.angryLeaveCount}`,
@@ -893,7 +987,7 @@ function renderResultDialog() {
   dom.resultOverlay.classList.remove("hidden");
 }
 
-function hasMetMainGoal() {
+function hasMetMainGoal(netProfitCoins = state.earnedCoins) {
   const goals = state.level.goals;
   if (goals.targetDishId && goals.targetDishCount) {
     return (state.targetDishServedCounts[goals.targetDishId] ?? 0) >= goals.targetDishCount;
@@ -904,17 +998,17 @@ function hasMetMainGoal() {
   if (goals.served) {
     return state.servedCustomers >= goals.served;
   }
-  return state.earnedCoins >= goals.coin1;
+  return netProfitCoins >= goals.coin1;
 }
 
-function calculateStars() {
-  if (state.earnedCoins >= state.level.goals.coin3) {
+function calculateStars(netProfitCoins = state.earnedCoins) {
+  if (netProfitCoins >= state.level.goals.coin3) {
     return 3;
   }
-  if (state.earnedCoins >= state.level.goals.coin2) {
+  if (netProfitCoins >= state.level.goals.coin2) {
     return 2;
   }
-  if (state.earnedCoins >= state.level.goals.coin1) {
+  if (netProfitCoins >= state.level.goals.coin1) {
     return 1;
   }
   return 0;
@@ -1052,11 +1146,16 @@ function getTotalDurationSec() {
 function renderHome() {
   state.saveData = loadSave();
   const currentLevelId = getPlayableLevelId();
+  const storeStage = getStoreVisualStageSummary(currentLevelId);
   dom.homeLevelText.textContent = String(currentLevelId);
   dom.homeCoinText.textContent = String(state.saveData.coins);
   dom.homeStarText.textContent = String(getTotalStars());
   dom.homeProgressText.textContent = `${getMvpCompletedCount()}/${MVP_LEVEL_LIMIT}`;
   dom.playCurrentButton.textContent = `进入第 ${currentLevelId} 关`;
+  dom.homeStoreStageText.textContent = `Lv.${storeStage.level} ${storeStage.name}`;
+  dom.homeStoreEffectText.textContent = storeStage.mainEffectText;
+  dom.homeStoreNextText.textContent = storeStage.nextStageGapText;
+  dom.homeStoreHintText.textContent = storeStage.recommendationText ?? "";
   const dailyRewardClaimed = state.saveData.adState.dailyRewardWatchedByDate[getLocalDateKey()] === true;
   dom.dailyAdButton.disabled = dailyRewardClaimed;
   dom.dailyAdButton.textContent = dailyRewardClaimed ? "今日已领取" : "每日广告奖励";
@@ -1085,7 +1184,8 @@ function render() {
 
 function renderCustomers() {
   const slots = [];
-  for (let index = 0; index < 4; index += 1) {
+  const maxWaitingCustomers = getMaxWaitingCustomers();
+  for (let index = 0; index < maxWaitingCustomers; index += 1) {
     const customer = state.activeCustomers[index];
     if (!customer) {
       slots.push('<div class="empty-customer"></div>');
@@ -1093,11 +1193,14 @@ function renderCustomers() {
     }
 
     const patienceRatio = customer.maxPatienceSec <= 0 ? 0 : customer.patienceRemainingSec / customer.maxPatienceSec;
-    const className = customer.configId === "customer_005" ? "customer rush" : "customer";
+    const customerConfig = state.configs.customerById.get(customer.configId);
+    const traitLabels = getCustomerTraitLabels(customerConfig);
+    const className = traitLabels.includes("急") ? "customer rush" : "customer";
     slots.push(`
       <button class="${className}" type="button" data-customer="${customer.runtimeId}">
         <div class="face"></div>
         <div class="customer-name">${customer.name}</div>
+        <div class="trait-tags">${traitLabels.map((label) => `<span>${label}</span>`).join("")}</div>
         <div class="orders">${customer.orderDishIds.map((dishId) => `<span class="chip">${getDishName(dishId)}</span>`).join("")}</div>
         <div class="patience"><div class="patience-fill" style="transform: scaleX(${Math.max(0, patienceRatio)})"></div></div>
       </button>
@@ -1110,7 +1213,17 @@ function renderCustomers() {
 function renderStations() {
   dom.stations.innerHTML = state.equipments
     .map((equipment) => {
-      const canCook = state.phase === "running" && equipment.slots.some((slot) => slot.status === "idle");
+      const recommendedDishId = pickNextDishForEquipment(equipment.configId);
+      const canCook =
+        state.phase === "running" &&
+        equipment.slots.some((slot) => slot.status === "idle") &&
+        recommendedDishId !== null;
+      const actionLabel =
+        state.level.id >= 11
+          ? recommendedDishId
+            ? `补${getDishName(recommendedDishId)}缺口`
+            : "点菜品备菜"
+          : "制作需求菜";
       const slots = equipment.slots
         .map((slot) => {
           const progress = slot.totalCookTimeSec <= 0 ? 0 : 1 - slot.timeRemainingSec / slot.totalCookTimeSec;
@@ -1127,7 +1240,7 @@ function renderStations() {
         <div class="station">
           <strong>${equipment.name}</strong>
           ${slots}
-          <button type="button" data-equipment="${equipment.configId}" ${canCook ? "" : "disabled"}>制作需求菜</button>
+          <button type="button" data-equipment="${equipment.configId}" ${canCook ? "" : "disabled"}>${actionLabel}</button>
         </div>
       `;
     })
@@ -1135,12 +1248,16 @@ function renderStations() {
 }
 
 function renderInventory() {
+  const limit = getPreparedDishLimit();
+  const lossRate = getLeftoverLossRate();
   dom.inventory.innerHTML = state.level.dishPool
     .map((dishId) => {
+      const count = state.cookedInventory[dishId] ?? 0;
+      const riskCoins = calculateDishLeftoverRisk(dishId, count, lossRate);
       return `
         <div class="inventory-item">
-          <span>${getDishName(dishId)}</span>
-          <strong>${state.cookedInventory[dishId] ?? 0}</strong>
+          <span>${getDishName(dishId)}<em>${lossRate > 0 && count > 0 ? `风险 -${riskCoins}` : "无损耗"}</em></span>
+          <strong>${count}/${limit}</strong>
         </div>
       `;
     })
@@ -1152,20 +1269,34 @@ function renderDishButtons() {
     .map((dishId) => {
       const dish = state.configs.dishById.get(dishId);
       const equipment = state.equipments.find((item) => item.configId === dish.stationId);
-      const canCook = state.phase === "running" && equipment?.slots.some((slot) => slot.status === "idle");
-      return `<button type="button" data-dish="${dishId}" ${canCook ? "" : "disabled"}>${dish.name}<br>${getCookDurationSec(dish).toFixed(1)}s</button>`;
+      const canCook = state.phase === "running" && equipment?.slots.some((slot) => slot.status === "idle") && !isDishAtPreparedLimit(dishId);
+      return `<button type="button" data-dish="${dishId}" ${canCook ? "" : "disabled"}>${dish.name}<br>${getCookDurationSec(dish).toFixed(1)}s · ${getSupplyCount(dishId)}/${getPreparedDishLimit()}</button>`;
     })
     .join("");
 }
 
 function renderLog() {
-  dom.logList.innerHTML = state.logLines.map((line) => `<div>${line}</div>`).join("");
+  const renderKey = state.logLines.join("\n");
+  if (dom.logList.dataset.renderKey === renderKey) {
+    return;
+  }
+
+  const previousScrollTop = dom.logList.scrollTop;
+  const shouldStickToLatest = previousScrollTop <= 4;
+  dom.logList.dataset.renderKey = renderKey;
+  dom.logList.innerHTML = state.logLines.map((line) => `<div>${escapeHtml(line)}</div>`).join("");
+  dom.logList.scrollTop = shouldStickToLatest ? 0 : previousScrollTop;
 }
 
 function renderUpgrade() {
   state.saveData = loadSave();
+  const storeStage = getStoreVisualStageSummary(state.saveData.currentLevelId);
   dom.upgradeCoinText.textContent = String(state.saveData.coins);
   dom.upgradeLevelText.textContent = String(state.saveData.currentLevelId);
+  dom.upgradeStoreStageText.textContent = `Lv.${storeStage.level} ${storeStage.name}`;
+  dom.upgradeStoreEffectText.textContent = storeStage.mainEffectText;
+  dom.upgradeStoreNextText.textContent = storeStage.nextStageGapText;
+  dom.upgradeStoreHintText.textContent = storeStage.recommendationText ?? "";
   renderGrowthModeHeader();
 
   const isStreet = state.growthViewMode === "commercialStreet";
@@ -1577,7 +1708,7 @@ function previewStoreUpgrade(config) {
     ? `第${config.unlockLevel}关解锁`
     : isMaxLevel
       ? "已满级"
-      : [formatEffects(config.effectsPerLevel), milestone?.name].filter(Boolean).join("，");
+      : [formatEffects(config.effectsPerLevel), milestone?.effectText ?? milestone?.name].filter(Boolean).join("，");
 
   return {
     id: config.id,
@@ -2001,14 +2132,19 @@ function getLocalDateKey() {
   return `${year}-${month}-${day}`;
 }
 
-function getTotalEconomyEffects() {
+function getStoreUpgradeEffects() {
   const total = {};
-  const equippedOwnedCosmeticIds = new Set();
   for (const storeUpgrade of state.configs.storeUpgrades) {
     const level = getSavedLevel(state.saveData.storeUpgradeLevels[storeUpgrade.id], storeUpgrade.maxLevel);
     addEffects(total, scaleEffects(storeUpgrade.effectsPerLevel, Math.max(0, level - 1)));
     addEffects(total, getMilestoneEffects(storeUpgrade, level));
   }
+  return total;
+}
+
+function getTotalEconomyEffects() {
+  const total = getStoreUpgradeEffects();
+  const equippedOwnedCosmeticIds = new Set();
 
   for (const cosmeticId of Object.values(state.saveData.equippedCosmeticIds)) {
     const cosmetic = state.configs.cosmeticById.get(cosmeticId);
@@ -2027,6 +2163,111 @@ function getTotalEconomyEffects() {
   return total;
 }
 
+function getEffectiveCustomerCount(level) {
+  const baseCount = Math.max(1, Math.floor(level.modifiers.customerCount));
+  if (level.id <= 10) {
+    return baseCount;
+  }
+
+  const effects = getStoreUpgradeEffects();
+  const cap = level.id <= MVP_LEVEL_LIMIT ? FRONT30_CUSTOMER_ATTRACT_CAP : LATE_CUSTOMER_ATTRACT_CAP;
+  const attractBonus = Math.min(cap, Math.max(0, effects.customerAttractBonus ?? 0));
+  const denseFlowBonus = getLevelDenseFlowBonus(level);
+  const eventMultiplier = getLevelEventCustomerCountMultiplier(level);
+  return Math.max(1, Math.floor(baseCount * eventMultiplier * (1 + attractBonus + denseFlowBonus) + 0.0001));
+}
+
+function getMaxWaitingCustomers() {
+  const effects = getStoreUpgradeEffects();
+  const extraSlots = Math.floor(Math.max(0, effects.maxWaitingCustomers ?? 0));
+  return Math.min(8, Math.max(1, DEFAULT_MAX_WAITING_CUSTOMERS + extraSlots));
+}
+
+function getPreparedDishLimit() {
+  const effects = getStoreUpgradeEffects();
+  const extraLimit = Math.floor(Math.max(0, effects.prepCacheLimit ?? 0));
+  return Math.min(8, Math.max(1, DEFAULT_PREP_CACHE_LIMIT + extraLimit));
+}
+
+function getStoreVisualStageSummary(levelId = state.saveData.currentLevelId) {
+  const upgradeProgress = state.configs.storeUpgrades.reduce((sum, storeUpgrade) => {
+    const level = getSavedLevel(state.saveData.storeUpgradeLevels[storeUpgrade.id], storeUpgrade.maxLevel);
+    return sum + Math.max(0, level - 1);
+  }, 0);
+  const effects = getStoreUpgradeEffects();
+  const progressStage = [...STORE_VISUAL_STAGES]
+    .reverse()
+    .find((stage) => upgradeProgress >= stage.minUpgradeProgress) ?? STORE_VISUAL_STAGES[0];
+  const visualStageLevel = Math.min(5, Math.max(1, 1 + Math.floor(Math.max(0, effects.visualStage ?? 0))));
+  const stageLevel = Math.max(progressStage.level, visualStageLevel);
+  const stage = STORE_VISUAL_STAGES.find((item) => item.level === stageLevel) ?? STORE_VISUAL_STAGES[0];
+  const nextStage = STORE_VISUAL_STAGES.find((item) => item.level === stage.level + 1);
+  const levelsToNextStage = nextStage ? Math.max(0, nextStage.minUpgradeProgress - upgradeProgress) : 0;
+  return {
+    level: stage.level,
+    name: stage.name,
+    upgradeProgress,
+    mainEffectText: formatStoreMainEffects(effects),
+    nextLevel: nextStage?.level,
+    nextName: nextStage?.name,
+    levelsToNextStage,
+    nextStageGapText: nextStage
+      ? `还差 ${levelsToNextStage} 次店铺升级到 Lv.${nextStage.level} ${nextStage.name}`
+      : "已达到最高视觉阶段",
+    recommendationText: getStoreUpgradeRecommendation(levelId),
+  };
+}
+
+function getStoreUpgradeRecommendation(levelId = state.saveData.currentLevelId) {
+  const recommendations = [
+    {
+      levelId: 15,
+      text: "第15关建议补清洁台和备菜台，降低客诉并放宽出餐缓存",
+      targets: [
+        ["store_cleanliness", 2],
+        ["store_prep_table", 2],
+      ],
+    },
+    {
+      levelId: 24,
+      text: "第24关建议补灯牌、桌椅和门面，承接热狗解锁后的客流",
+      targets: [
+        ["store_signboard", 3],
+        ["store_tables", 3],
+        ["store_facade", 2],
+      ],
+    },
+    {
+      levelId: 30,
+      text: "第30关建议店铺进入夜市摊位阶段，优先桌椅、灯牌、备菜台",
+      targets: [
+        ["store_tables", 4],
+        ["store_signboard", 4],
+        ["store_prep_table", 3],
+      ],
+    },
+  ];
+  const recommendation = recommendations.find((item) => item.levelId === levelId);
+  if (!recommendation) {
+    return undefined;
+  }
+
+  const missingTargets = recommendation.targets
+    .map(([storeUpgradeId, targetLevel]) => {
+      const config = state.configs.storeUpgradeById.get(storeUpgradeId);
+      if (!config) {
+        return null;
+      }
+      const currentLevel = getSavedLevel(state.saveData.storeUpgradeLevels[storeUpgradeId], config.maxLevel);
+      return currentLevel < targetLevel ? `${config.name}Lv.${targetLevel}` : null;
+    })
+    .filter(Boolean);
+
+  return missingTargets.length > 0
+    ? `${recommendation.text}（推荐：${missingTargets.join(" / ")}）`
+    : `第${levelId}关店铺推荐已达标`;
+}
+
 function calculateCustomerRewardBreakdown(customerConfig, orderDishIds, patienceRatio, combo) {
   const effects = getTotalEconomyEffects();
   const grossSales = orderDishIds.reduce((sum, dishId) => {
@@ -2040,8 +2281,12 @@ function calculateCustomerRewardBreakdown(customerConfig, orderDishIds, patience
   const quickTipRate = Math.min(1, Math.max(0, patienceRatio)) * MAX_QUICK_TIP_BONUS;
   const comboTipRate = Math.min(MAX_COMBO_TIP_BONUS, Math.max(0, combo) * COMBO_TIP_BONUS_PER_STEP);
   const levelRewardMultiplier = state.level.modifiers.rewardMultiplier ?? 1;
-  const tips = Math.round(grossSales * (quickTipRate + comboTipRate + (effects.tipBonus ?? 0)) * customerConfig.tipMultiplier * levelRewardMultiplier);
-  const adjustedSales = grossSales * customerConfig.tipMultiplier * levelRewardMultiplier;
+  const traitTipRate = getCustomerTraitTipBonus(customerConfig, combo);
+  const tipRate = quickTipRate + comboTipRate + traitTipRate + getLevelEventTipBonus(state.level) + (effects.tipBonus ?? 0);
+  const ticketMultiplier =
+    getCustomerTicketMultiplier(customerConfig) * getPickyCustomerTicketMultiplier(customerConfig) * getLevelEventPriceMultiplier(state.level);
+  const tips = Math.round(grossSales * tipRate * customerConfig.tipMultiplier * getPickyCustomerTipMultiplier(customerConfig) * levelRewardMultiplier);
+  const adjustedSales = grossSales * customerConfig.tipMultiplier * ticketMultiplier * levelRewardMultiplier;
   const serviceBonus = SERVICE_COIN_BONUS + Math.floor(Math.max(0, effects.rating ?? 0) * 0.5);
   const netCoins = Math.max(1, Math.round(adjustedSales + tips + serviceBonus - ingredientCost));
 
@@ -2057,7 +2302,63 @@ function calculateCustomerRewardBreakdown(customerConfig, orderDishIds, patience
 function getCustomerPatienceSec(customerConfig) {
   const effects = getTotalEconomyEffects();
   const patienceBonus = Math.min(0.6, Math.max(0, effects.patienceBonus ?? 0));
-  return customerConfig.basePatience * (state.level.modifiers.patienceMultiplier ?? 1) * (1 + patienceBonus);
+  return customerConfig.basePatience * (state.level.modifiers.patienceMultiplier ?? 1) * (1 + patienceBonus) * getCustomerPatienceTraitMultiplier(customerConfig);
+}
+
+function calculateLeftoverLoss() {
+  const lossRate = getLeftoverLossRate();
+  const effects = getTotalEconomyEffects();
+  let remainingDishCount = 0;
+  let ingredientCost = 0;
+
+  for (const [dishId, count] of Object.entries(state.cookedInventory)) {
+    const safeCount = Math.max(0, Math.floor(count ?? 0));
+    if (safeCount <= 0) {
+      continue;
+    }
+
+    const dish = state.configs.dishById.get(dishId);
+    if (!dish) {
+      continue;
+    }
+
+    remainingDishCount += safeCount;
+    ingredientCost += getDishIngredientCostAtLevel(dish, state.saveData.dishLevels[dish.id] ?? 1, effects) * safeCount;
+  }
+
+  return {
+    remainingDishCount,
+    ingredientCost,
+    lossRate,
+    lossCoins: Math.round(ingredientCost * lossRate),
+  };
+}
+
+function calculateDishLeftoverRisk(dishId, count, lossRate = getLeftoverLossRate()) {
+  const dish = state.configs.dishById.get(dishId);
+  if (!dish || count <= 0 || lossRate <= 0) {
+    return 0;
+  }
+
+  return Math.round(getDishIngredientCostAtLevel(dish, state.saveData.dishLevels[dish.id] ?? 1, getTotalEconomyEffects()) * count * lossRate);
+}
+
+function getLeftoverLossRate() {
+  const baseRate = getBaseLeftoverLossRate(state.level?.id ?? 1);
+  if (baseRate <= 0) {
+    return 0;
+  }
+
+  const effects = getStoreUpgradeEffects();
+  const reduce = Math.min(MAX_LEFTOVER_LOSS_REDUCE, Math.max(0, effects.leftoverLossReduce ?? 0));
+  return Math.max(0, baseRate * (1 - reduce));
+}
+
+function getBaseLeftoverLossRate(levelId) {
+  if (levelId <= 10) {
+    return 0;
+  }
+  return levelId <= 20 ? MIDGAME_LEFTOVER_LOSS_RATE : LATEGAME_LEFTOVER_LOSS_RATE;
 }
 
 function calculateAngryLeavePenalty() {
@@ -2070,6 +2371,115 @@ function calculateWrongServePenalty() {
   const effects = getTotalEconomyEffects();
   const complaintReduce = Math.min(0.8, Math.max(0, effects.complaintReduce ?? 0));
   return Math.max(0, Math.round(2 * (1 - complaintReduce)));
+}
+
+function hasCustomerTrait(customerConfig, ...traits) {
+  return traits.some((trait) => customerConfig?.traits?.includes(trait));
+}
+
+function getCustomerTraitLabels(customerConfig) {
+  const labels = [];
+  if (hasCustomerTrait(customerConfig, "low_patience", "pressure_intro")) {
+    labels.push("急");
+  }
+  if (hasCustomerTrait(customerConfig, "combo_bonus", "loyal")) {
+    labels.push("熟");
+  }
+  if (hasCustomerTrait(customerConfig, "picky", "hygiene_sensitive", "facade_sensitive")) {
+    labels.push("挑");
+  }
+  if (hasCustomerTrait(customerConfig, "dense_flow", "lower_ticket")) {
+    labels.push("学");
+  }
+  return labels;
+}
+
+function getLevelDenseFlowBonus(level) {
+  const denseWeight = Object.entries(level.customerMix).reduce((sum, [customerId, weight]) => {
+    const customer = state.configs.customerById.get(customerId);
+    return hasCustomerTrait(customer, "dense_flow") ? sum + Math.max(0, weight ?? 0) : sum;
+  }, 0);
+  return Math.min(0.16, denseWeight * 0.12);
+}
+
+function getLevelEventCustomerCountMultiplier(level) {
+  if (level.modifiers.eventId === "event_rain_light") {
+    return 0.9;
+  }
+  if (level.modifiers.eventId === "event_school_rush") {
+    return 1.12;
+  }
+  return 1;
+}
+
+function getLevelEventPriceMultiplier(level) {
+  return level.modifiers.eventId === "event_rain_light" ? 1.15 : 1;
+}
+
+function getLevelEventTipBonus(level) {
+  if (level.modifiers.eventId === "event_rain_light") {
+    return 0.12;
+  }
+  if (level.modifiers.eventId === "event_influencer_visit") {
+    return 0.03;
+  }
+  if (level.modifiers.eventId === "event_hygiene_check") {
+    return 0.02;
+  }
+  return 0;
+}
+
+function getPickyReadiness() {
+  const effects = getStoreUpgradeEffects();
+  return Math.min(
+    1,
+    Math.max(0, effects.pickyAcceptance ?? 0) +
+      Math.max(0, effects.visualStage ?? 0) * 0.08 +
+      Math.max(0, effects.rating ?? 0) * 0.015,
+  );
+}
+
+function getCustomerPatienceTraitMultiplier(customerConfig) {
+  let multiplier = 1;
+  if (hasCustomerTrait(customerConfig, "low_patience", "pressure_intro")) {
+    multiplier *= 0.92;
+  }
+  if (hasCustomerTrait(customerConfig, "picky", "hygiene_sensitive", "facade_sensitive")) {
+    const requiredReadiness = state.level.modifiers.eventId === "event_hygiene_check" ? 0.28 : 0.18;
+    if (getPickyReadiness() < requiredReadiness) {
+      multiplier *= 0.82;
+    }
+  }
+  return multiplier;
+}
+
+function getCustomerTraitTipBonus(customerConfig, combo) {
+  let bonus = 0;
+  if (hasCustomerTrait(customerConfig, "low_patience", "pressure_intro")) {
+    bonus += 0.08;
+  }
+  if (hasCustomerTrait(customerConfig, "combo_bonus", "loyal") && combo >= 2) {
+    bonus += Math.min(0.18, combo * 0.025);
+  }
+  return bonus;
+}
+
+function getCustomerTicketMultiplier(customerConfig) {
+  return hasCustomerTrait(customerConfig, "lower_ticket") ? 0.9 : 1;
+}
+
+function getPickyCustomerTicketMultiplier(customerConfig) {
+  if (!hasCustomerTrait(customerConfig, "picky", "hygiene_sensitive", "facade_sensitive")) {
+    return 1;
+  }
+  return getPickyReadiness() >= 0.18 ? 1 : 0.92;
+}
+
+function getPickyCustomerTipMultiplier(customerConfig) {
+  if (!hasCustomerTrait(customerConfig, "picky", "hygiene_sensitive", "facade_sensitive")) {
+    return 1;
+  }
+  return getPickyReadiness() >= 0.18 ? 1 : 0.86;
 }
 
 function calculateSettlementAdBonus(level, baseRewardCoins) {
@@ -2107,6 +2517,12 @@ function scaleEffects(effects, scale) {
     complaintReduce: (effects.complaintReduce ?? 0) * scale,
     rating: (effects.rating ?? 0) * scale,
     tipBonus: (effects.tipBonus ?? 0) * scale,
+    customerAttractBonus: (effects.customerAttractBonus ?? 0) * scale,
+    maxWaitingCustomers: (effects.maxWaitingCustomers ?? 0) * scale,
+    prepCacheLimit: (effects.prepCacheLimit ?? 0) * scale,
+    pickyAcceptance: (effects.pickyAcceptance ?? 0) * scale,
+    leftoverLossReduce: (effects.leftoverLossReduce ?? 0) * scale,
+    visualStage: (effects.visualStage ?? 0) * scale,
   };
 }
 
@@ -2122,6 +2538,45 @@ function addEffects(target, source) {
   target.complaintReduce = (target.complaintReduce ?? 0) + (source.complaintReduce ?? 0);
   target.rating = (target.rating ?? 0) + (source.rating ?? 0);
   target.tipBonus = (target.tipBonus ?? 0) + (source.tipBonus ?? 0);
+  target.customerAttractBonus = (target.customerAttractBonus ?? 0) + (source.customerAttractBonus ?? 0);
+  target.maxWaitingCustomers = (target.maxWaitingCustomers ?? 0) + (source.maxWaitingCustomers ?? 0);
+  target.prepCacheLimit = (target.prepCacheLimit ?? 0) + (source.prepCacheLimit ?? 0);
+  target.pickyAcceptance = (target.pickyAcceptance ?? 0) + (source.pickyAcceptance ?? 0);
+  target.leftoverLossReduce = (target.leftoverLossReduce ?? 0) + (source.leftoverLossReduce ?? 0);
+  target.visualStage = (target.visualStage ?? 0) + (source.visualStage ?? 0);
+}
+
+function formatStoreMainEffects(effects) {
+  const parts = [];
+  if (effects.customerAttractBonus) {
+    parts.push(`客流+${Math.round(effects.customerAttractBonus * 100)}%`);
+  }
+  if (effects.priceBonus) {
+    parts.push(`售价+${Math.round(effects.priceBonus * 100)}%`);
+  }
+  const waitingSlots = Math.floor(effects.maxWaitingCustomers ?? 0);
+  if (waitingSlots > 0) {
+    parts.push(`排队上限+${waitingSlots}`);
+  }
+  if (effects.prepCacheLimit) {
+    parts.push(`备菜上限+${Math.floor(effects.prepCacheLimit)}`);
+  }
+  if (effects.costReduce) {
+    parts.push(`食材成本-${Math.round(effects.costReduce * 100)}%`);
+  }
+  if (effects.complaintReduce) {
+    parts.push(`客诉惩罚-${Math.round(effects.complaintReduce * 100)}%`);
+  }
+  if (effects.pickyAcceptance) {
+    parts.push(`挑剔接受+${Math.round(effects.pickyAcceptance * 100)}%`);
+  }
+  if (effects.leftoverLossReduce) {
+    parts.push(`剩菜损耗-${Math.round(effects.leftoverLossReduce * 100)}%`);
+  }
+  if (effects.rating) {
+    parts.push(`口碑+${Math.round(effects.rating * 10) / 10}`);
+  }
+  return parts.join("，") || "基础摊位";
 }
 
 function formatEffects(effects) {
@@ -2146,6 +2601,28 @@ function formatEffects(effects) {
   }
   if (effects.tipBonus) {
     parts.push(`小费+${Math.round(effects.tipBonus * 100)}%`);
+  }
+  if (effects.customerAttractBonus) {
+    parts.push(`客流+${Math.round(effects.customerAttractBonus * 100)}%`);
+  }
+  if (effects.maxWaitingCustomers) {
+    parts.push(
+      effects.maxWaitingCustomers >= 1
+        ? `排队上限+${Math.floor(effects.maxWaitingCustomers)}`
+        : `排队上限进度+${Math.round(effects.maxWaitingCustomers * 100)}%`,
+    );
+  }
+  if (effects.prepCacheLimit) {
+    parts.push(`备菜上限+${Math.round(effects.prepCacheLimit)}`);
+  }
+  if (effects.pickyAcceptance) {
+    parts.push(`挑剔接受+${Math.round(effects.pickyAcceptance * 100)}%`);
+  }
+  if (effects.leftoverLossReduce) {
+    parts.push(`剩菜损耗-${Math.round(effects.leftoverLossReduce * 100)}%`);
+  }
+  if (effects.visualStage) {
+    parts.push(`视觉阶段+${Math.round(effects.visualStage * 10) / 10}`);
   }
   return parts.join("，") || "外观升级";
 }
@@ -2278,8 +2755,42 @@ function roundTo10(value) {
 }
 
 function addLog(message) {
-  state.logLines.unshift(message);
-  state.logLines = state.logLines.slice(0, 5);
+  state.logLines.unshift(decorateLogMessage(message));
+  state.logLines = state.logLines.slice(0, 32);
+}
+
+function decorateLogMessage(message) {
+  if (/^(🪙|⚠️|🍳|🧾|✅|📋|•)/u.test(message)) {
+    return message;
+  }
+  if (/客诉|上菜失败|等急|未达成目标/.test(message)) {
+    return `⚠️ ${message}`;
+  }
+  if (/金币|满意离开/.test(message)) {
+    return `🪙 ${message}`;
+  }
+  if (/开始做|做好了|备菜|制作/.test(message)) {
+    return `🍳 ${message}`;
+  }
+  if (/点了|菜还没齐/.test(message)) {
+    return `🧾 ${message}`;
+  }
+  if (/达成目标/.test(message)) {
+    return `✅ ${message}`;
+  }
+  if (/营业|开摊|暂停|继续|准备好了/.test(message)) {
+    return `📋 ${message}`;
+  }
+  return `• ${message}`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function countDishIds(dishIds) {

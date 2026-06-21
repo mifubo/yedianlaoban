@@ -8,6 +8,14 @@
   </head>
   <body>
     <main class="phone">
+      <section id="loadingView" class="view loading-view">
+        <div>
+          <div class="kicker">老街路口</div>
+          <h1>小镇夜市老板</h1>
+          <p>正在备摊...</p>
+        </div>
+      </section>
+
       <section id="avatarSelectView" class="view hidden">
         <section class="topbar">
           <div>
@@ -28,7 +36,7 @@
         </section>
       </section>
 
-      <section id="homeView" class="view home-screen">
+      <section id="homeView" class="view home-screen hidden">
         <section class="topbar home-topbar">
           <button
             id="homeTitleButton"
@@ -69,6 +77,16 @@
             <span>进度</span>
             <strong id="homeProgressText">0/10</strong>
           </div>
+        </section>
+
+        <section class="store-summary">
+          <div>
+            <span>店铺阶段</span>
+            <strong id="homeStoreStageText">Lv.1 破旧推车</strong>
+          </div>
+          <p id="homeStoreEffectText">基础摊位</p>
+          <p id="homeStoreNextText">还差 4 次店铺升级到 Lv.2 亮灯小摊</p>
+          <p id="homeStoreHintText" class="store-hint"></p>
         </section>
 
         <section class="home-stage">
@@ -128,6 +146,10 @@
 
         <section class="street">
           <div class="awning"></div>
+          <section class="log street-log" aria-label="营业记录">
+            <div class="panel-title">营业记录</div>
+            <div id="logList" class="log-list"></div>
+          </section>
           <div id="customerLane" class="customer-lane"></div>
         </section>
 
@@ -154,10 +176,6 @@
           <button id="resetButton" type="button">重开本关</button>
         </section>
 
-        <section class="log">
-          <div class="panel-title">营业记录</div>
-          <div id="logList" class="log-list"></div>
-        </section>
       </section>
 
       <section id="upgradeView" class="view hidden">
@@ -178,6 +196,16 @@
             <span>当前关</span>
             <strong id="upgradeLevelText">1</strong>
           </div>
+        </section>
+
+        <section class="store-summary upgrade-store-summary">
+          <div>
+            <span>店铺阶段</span>
+            <strong id="upgradeStoreStageText">Lv.1 破旧推车</strong>
+          </div>
+          <p id="upgradeStoreEffectText">基础摊位</p>
+          <p id="upgradeStoreNextText">还差 4 次店铺升级到 Lv.2 亮灯小摊</p>
+          <p id="upgradeStoreHintText" class="store-hint"></p>
         </section>
 
         <section id="outfitSection" class="panel avatar-panel hidden">

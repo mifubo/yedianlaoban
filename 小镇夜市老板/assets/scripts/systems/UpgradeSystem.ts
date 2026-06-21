@@ -264,7 +264,7 @@ export class UpgradeSystem {
     const milestone = this.getMilestoneAtLevel(config, nextLevel);
     const parts = [this.formatEffects(config.effectsPerLevel)];
     if (milestone) {
-      parts.push(milestone.name);
+      parts.push(milestone.effectText || milestone.name);
     }
     return parts.join('，');
   }
@@ -293,6 +293,12 @@ export class UpgradeSystem {
     complaintReduce?: number;
     rating?: number;
     tipBonus?: number;
+    customerAttractBonus?: number;
+    maxWaitingCustomers?: number;
+    prepCacheLimit?: number;
+    pickyAcceptance?: number;
+    leftoverLossReduce?: number;
+    visualStage?: number;
   }): string {
     const parts: string[] = [];
     if (effects.priceBonus) {
@@ -315,6 +321,28 @@ export class UpgradeSystem {
     }
     if (effects.tipBonus) {
       parts.push(`小费+${Math.round(effects.tipBonus * 100)}%`);
+    }
+    if (effects.customerAttractBonus) {
+      parts.push(`客流+${Math.round(effects.customerAttractBonus * 100)}%`);
+    }
+    if (effects.maxWaitingCustomers) {
+      parts.push(
+        effects.maxWaitingCustomers >= 1
+          ? `排队上限+${Math.floor(effects.maxWaitingCustomers)}`
+          : `排队上限进度+${Math.round(effects.maxWaitingCustomers * 100)}%`
+      );
+    }
+    if (effects.prepCacheLimit) {
+      parts.push(`备菜上限+${Math.max(1, Math.round(effects.prepCacheLimit))}`);
+    }
+    if (effects.pickyAcceptance) {
+      parts.push(`挑剔接受+${Math.round(effects.pickyAcceptance * 100)}%`);
+    }
+    if (effects.leftoverLossReduce) {
+      parts.push(`剩菜损耗-${Math.round(effects.leftoverLossReduce * 100)}%`);
+    }
+    if (effects.visualStage) {
+      parts.push(`视觉阶段+${Math.round(effects.visualStage * 10) / 10}`);
     }
     return parts.join('，') || '外观升级';
   }

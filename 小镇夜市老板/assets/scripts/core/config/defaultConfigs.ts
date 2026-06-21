@@ -728,6 +728,24 @@ export const mvpCustomerConfigs: CustomerConfig[] = [
       "combo_bonus",
       "loyal"
     ]
+  },
+  {
+    "id": "customer_007",
+    "name": "挑剔顾客",
+    "unlockChapter": 2,
+    "basePatience": 27,
+    "tipMultiplier": 1.28,
+    "preferredDishes": [
+      "dish_004",
+      "dish_005",
+      "dish_006"
+    ],
+    "maxOrderItems": 1,
+    "traits": [
+      "picky",
+      "hygiene_sensitive",
+      "facade_sensitive"
+    ]
   }
 ];
 
@@ -1015,32 +1033,46 @@ export const mvpStoreUpgradeConfigs: StoreUpgradeConfig[] = [
     "name": "灯牌招牌",
     "unlockLevel": 1,
     "maxLevel": 8,
-    "baseUpgradeCost": 160,
+    "baseUpgradeCost": 150,
     "effectsPerLevel": {
-      "priceBonus": 0.012,
-      "rating": 0.25
+      "priceBonus": 0.01,
+      "rating": 0.18,
+      "customerAttractBonus": 0.018
     },
     "upgradeMilestones": [
       {
         "level": 3,
         "name": "亮灯招牌",
-        "effectText": "全菜品售价+3.6%，高消费顾客开始注意摊位",
+        "effectText": "售价继续成长，客流吸引+4%，口碑+1",
         "effects": {
+          "customerAttractBonus": 0.04,
           "rating": 1
         }
       },
       {
         "level": 6,
         "name": "霓虹灯牌",
-        "effectText": "全菜品售价继续成长，口碑+1",
+        "effectText": "灯牌更醒目，售价+2%，客流吸引+4%，口碑+1",
         "effects": {
+          "priceBonus": 0.02,
+          "customerAttractBonus": 0.04,
+          "rating": 1
+        }
+      },
+      {
+        "level": 8,
+        "name": "网红灯箱",
+        "effectText": "夜市辨识度拉满，客流吸引+3%，口碑+1",
+        "effects": {
+          "customerAttractBonus": 0.03,
           "rating": 1
         }
       }
     ],
     "tags": [
       "store",
-      "revenue"
+      "revenue",
+      "traffic"
     ]
   },
   {
@@ -1048,24 +1080,27 @@ export const mvpStoreUpgradeConfigs: StoreUpgradeConfig[] = [
     "name": "桌椅排队区",
     "unlockLevel": 4,
     "maxLevel": 8,
-    "baseUpgradeCost": 140,
+    "baseUpgradeCost": 130,
     "effectsPerLevel": {
-      "patienceBonus": 0.02
+      "patienceBonus": 0.018,
+      "maxWaitingCustomers": 0.12
     },
     "upgradeMilestones": [
       {
         "level": 3,
         "name": "塑料桌椅",
-        "effectText": "顾客耐心明显提升，急性子流失降低",
+        "effectText": "排队上限+1，顾客耐心明显提升",
         "effects": {
+          "maxWaitingCustomers": 1,
           "patienceBonus": 0.03
         }
       },
       {
         "level": 6,
         "name": "遮阳排队区",
-        "effectText": "顾客耐心继续提升，客诉减免+3%",
+        "effectText": "排队上限再+1，顾客耐心继续提升，客诉减免+3%",
         "effects": {
+          "maxWaitingCustomers": 1,
           "patienceBonus": 0.03,
           "complaintReduce": 0.03
         }
@@ -1073,7 +1108,8 @@ export const mvpStoreUpgradeConfigs: StoreUpgradeConfig[] = [
     ],
     "tags": [
       "store",
-      "patience"
+      "patience",
+      "queue"
     ]
   },
   {
@@ -1081,25 +1117,28 @@ export const mvpStoreUpgradeConfigs: StoreUpgradeConfig[] = [
     "name": "冰柜备货",
     "unlockLevel": 8,
     "maxLevel": 8,
-    "baseUpgradeCost": 180,
+    "baseUpgradeCost": 170,
     "effectsPerLevel": {
-      "costReduce": 0.018
+      "costReduce": 0.016,
+      "leftoverLossReduce": 0.018
     },
     "upgradeMilestones": [
       {
         "level": 3,
         "name": "冷藏备货",
-        "effectText": "食材损耗下降，成本再-3%",
+        "effectText": "食材损耗下降，成本再-2.5%，剩菜损耗再降",
         "effects": {
-          "costReduce": 0.03
+          "costReduce": 0.025,
+          "leftoverLossReduce": 0.04
         }
       },
       {
         "level": 6,
         "name": "分区冰柜",
-        "effectText": "成本控制继续提升，客诉减免+2%",
+        "effectText": "成本控制继续提升，剩菜损耗继续下降，客诉减免+2%",
         "effects": {
           "costReduce": 0.03,
+          "leftoverLossReduce": 0.05,
           "complaintReduce": 0.02
         }
       }
@@ -1111,36 +1150,122 @@ export const mvpStoreUpgradeConfigs: StoreUpgradeConfig[] = [
   },
   {
     "id": "store_cleanliness",
-    "name": "清洁台",
+    "name": "清洁台/垃圾桶",
     "unlockLevel": 12,
     "maxLevel": 6,
-    "baseUpgradeCost": 170,
+    "baseUpgradeCost": 160,
     "effectsPerLevel": {
-      "complaintReduce": 0.025,
-      "rating": 0.15
+      "complaintReduce": 0.024,
+      "pickyAcceptance": 0.025,
+      "rating": 0.12
     },
     "upgradeMilestones": [
       {
         "level": 3,
-        "name": "明亮灶台",
-        "effectText": "挑剔顾客流失下降，口碑+1",
+        "name": "明亮清洁台",
+        "effectText": "挑剔顾客接受度+5%，客诉减免+4%，口碑+1",
         "effects": {
           "complaintReduce": 0.04,
+          "pickyAcceptance": 0.05,
           "rating": 1
         }
       },
       {
         "level": 5,
         "name": "整洁摊位",
-        "effectText": "客诉惩罚继续下降，高消费顾客更稳定",
+        "effectText": "客诉惩罚继续下降，挑剔顾客接受度+6%",
         "effects": {
-          "complaintReduce": 0.05
+          "complaintReduce": 0.05,
+          "pickyAcceptance": 0.06
         }
       }
     ],
     "tags": [
       "store",
-      "complaint"
+      "complaint",
+      "picky_customer"
+    ]
+  },
+  {
+    "id": "store_prep_table",
+    "name": "备菜台",
+    "unlockLevel": 10,
+    "maxLevel": 6,
+    "baseUpgradeCost": 150,
+    "effectsPerLevel": {
+      "prepCacheLimit": 1,
+      "patienceBonus": 0.008,
+      "leftoverLossReduce": 0.012
+    },
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "分格备菜台",
+        "effectText": "熟食/半成品缓存上限再+1，高峰备菜更稳，剩菜风险下降",
+        "effects": {
+          "prepCacheLimit": 1,
+          "leftoverLossReduce": 0.035
+        }
+      },
+      {
+        "level": 5,
+        "name": "保温备菜台",
+        "effectText": "熟食/半成品缓存上限再+1，顾客耐心+2%，剩菜风险再降",
+        "effects": {
+          "prepCacheLimit": 1,
+          "patienceBonus": 0.02,
+          "leftoverLossReduce": 0.04
+        }
+      }
+    ],
+    "tags": [
+      "store",
+      "prep_cache"
+    ]
+  },
+  {
+    "id": "store_facade",
+    "name": "门面装修",
+    "unlockLevel": 16,
+    "maxLevel": 8,
+    "baseUpgradeCost": 190,
+    "effectsPerLevel": {
+      "visualStage": 0.35,
+      "rating": 0.15
+    },
+    "upgradeMilestones": [
+      {
+        "level": 3,
+        "name": "统一摊布",
+        "effectText": "店铺视觉阶段进度提升，口碑+1",
+        "effects": {
+          "visualStage": 0.65,
+          "rating": 1
+        }
+      },
+      {
+        "level": 6,
+        "name": "老街档口门头",
+        "effectText": "店铺视觉阶段显著提升，口碑+1",
+        "effects": {
+          "visualStage": 1,
+          "rating": 1
+        }
+      },
+      {
+        "level": 8,
+        "name": "网红夜市门面",
+        "effectText": "店铺视觉阶段冲刺，口碑+1",
+        "effects": {
+          "visualStage": 0.8,
+          "rating": 1
+        }
+      }
+    ],
+    "tags": [
+      "store",
+      "facade",
+      "visual_stage"
     ]
   }
 ];
@@ -1174,45 +1299,6 @@ export const mvpAvatarConfigs: PlayerAvatarConfig[] = [
     "tags": [
       "boss",
       "avatar"
-    ]
-  }
-];
-
-export const mvpCosmeticSetConfigs: CosmeticSetConfig[] = [
-  {
-    "id": "night_market_veteran",
-    "name": "夜市老手套装",
-    "requiredCosmeticIds": [
-      "cosmetic_straw_hat",
-      "cosmetic_canvas_apron",
-      "cosmetic_light_shoes",
-      "cosmetic_bamboo_tongs"
-    ],
-    "effects": {
-      "complaintReduce": 0.015,
-      "rating": 1
-    },
-    "tags": [
-      "set",
-      "stable_service"
-    ]
-  },
-  {
-    "id": "fresh_service_set",
-    "name": "清爽招待套装",
-    "requiredCosmeticIds": [
-      "cosmetic_tidy_hair",
-      "cosmetic_mint_tee",
-      "cosmetic_lemon_apron",
-      "cosmetic_anti_slip_sneakers"
-    ],
-    "effects": {
-      "patienceBonus": 0.01,
-      "tipBonus": 0.02
-    },
-    "tags": [
-      "set",
-      "tip"
     ]
   }
 ];
@@ -1419,6 +1505,45 @@ export const mvpCosmeticItemConfigs: CosmeticItemConfig[] = [
     "tags": [
       "cosmetic",
       "tool"
+    ]
+  }
+];
+
+export const mvpCosmeticSetConfigs: CosmeticSetConfig[] = [
+  {
+    "id": "night_market_veteran",
+    "name": "夜市老手套装",
+    "requiredCosmeticIds": [
+      "cosmetic_straw_hat",
+      "cosmetic_canvas_apron",
+      "cosmetic_light_shoes",
+      "cosmetic_bamboo_tongs"
+    ],
+    "effects": {
+      "complaintReduce": 0.015,
+      "rating": 1
+    },
+    "tags": [
+      "set",
+      "stable_service"
+    ]
+  },
+  {
+    "id": "fresh_service_set",
+    "name": "清爽招待套装",
+    "requiredCosmeticIds": [
+      "cosmetic_tidy_hair",
+      "cosmetic_mint_tee",
+      "cosmetic_lemon_apron",
+      "cosmetic_anti_slip_sneakers"
+    ],
+    "effects": {
+      "patienceBonus": 0.01,
+      "tipBonus": 0.02
+    },
+    "tags": [
+      "set",
+      "tip"
     ]
   }
 ];
@@ -2135,7 +2260,8 @@ export const mvpLevelConfigs: LevelConfig[] = [
       "patienceMultiplier": 0.9,
       "rewardMultiplier": 1.1,
       "waveCount": 3,
-      "rawRuleText": "午后放学潮;3个客流波次"
+      "eventId": "event_school_rush",
+      "rawRuleText": "午后放学潮:学生客流更密集;3个客流波次"
     }
   },
   {
@@ -2150,9 +2276,10 @@ export const mvpLevelConfigs: LevelConfig[] = [
       "dish_004"
     ],
     "customerMix": {
-      "customer_002": 0.75,
+      "customer_002": 0.65,
       "customer_005": 0.15,
-      "customer_001": 0.1
+      "customer_001": 0.1,
+      "customer_006": 0.1
     },
     "goals": {
       "mainText": "赚够金币",
@@ -2178,8 +2305,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
       "dish_004"
     ],
     "customerMix": {
-      "customer_002": 0.75,
-      "customer_005": 0.25
+      "customer_002": 0.65,
+      "customer_005": 0.2,
+      "customer_006": 0.15
     },
     "goals": {
       "mainText": "连续满意8人",
@@ -2208,9 +2336,10 @@ export const mvpLevelConfigs: LevelConfig[] = [
       "dish_003"
     ],
     "customerMix": {
-      "customer_002": 0.7,
-      "customer_005": 0.2,
-      "customer_001": 0.1
+      "customer_002": 0.62,
+      "customer_005": 0.18,
+      "customer_001": 0.08,
+      "customer_007": 0.12
     },
     "goals": {
       "mainText": "赚够金币",
@@ -2221,7 +2350,9 @@ export const mvpLevelConfigs: LevelConfig[] = [
     "modifiers": {
       "customerCount": 25,
       "patienceMultiplier": 1,
-      "rewardMultiplier": 1
+      "rewardMultiplier": 1,
+      "eventId": "event_hygiene_check",
+      "rawRuleText": "卫生抽查:挑剔顾客会看清洁和门面"
     }
   },
   {

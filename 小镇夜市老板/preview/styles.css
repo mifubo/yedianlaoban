@@ -12,9 +12,11 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   display: grid;
   place-items: center;
+  overflow: hidden;
   background:
     radial-gradient(circle at 24% 8%, rgba(255, 203, 88, 0.18), transparent 32%),
     radial-gradient(circle at 78% 18%, rgba(117, 204, 184, 0.18), transparent 34%),
@@ -68,7 +70,8 @@ button:disabled {
 .phone {
   position: relative;
   width: min(100vw, 750px);
-  min-height: min(100vh, 1334px);
+  height: min(100vh, 1334px);
+  height: min(100dvh, 1334px);
   padding: 22px;
   overflow: hidden;
   background:
@@ -77,9 +80,25 @@ button:disabled {
     linear-gradient(180deg, #162533 0%, #151922 48%, #110d13 100%);
 }
 
+.phone > .view:not(.hidden) {
+  height: 100%;
+  min-height: 0;
+}
+
 .view.hidden,
 .hidden {
   display: none;
+}
+
+.loading-view {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.loading-view p {
+  margin: 10px 0 0;
+  color: #c8d8dc;
 }
 
 .topbar {
@@ -91,9 +110,9 @@ button:disabled {
 
 .home-screen {
   position: relative;
-  min-height: calc(min(100vh, 1334px) - 44px);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .home-topbar {
@@ -230,6 +249,26 @@ select {
   background: rgba(255, 255, 255, 0.08);
 }
 
+#gameView:not(.hidden) {
+  display: grid;
+  grid-template-rows: auto auto minmax(330px, 1fr) auto auto auto;
+  gap: 10px;
+  overflow: hidden;
+}
+
+#gameView .hud,
+#gameView .street,
+#gameView .service,
+#gameView .dish-panel,
+#gameView .controls {
+  margin-top: 0;
+}
+
+#gameView .street {
+  height: 100%;
+  min-height: 0;
+}
+
 .hud {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -280,6 +319,44 @@ select {
   font-size: 20px;
   line-height: 1.1;
   overflow-wrap: anywhere;
+}
+
+.store-summary {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 246, 215, 0.14);
+}
+
+.store-summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.store-summary span {
+  color: #b7c7cf;
+  font-size: 13px;
+}
+
+.store-summary strong {
+  color: #fff6d7;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.store-summary p {
+  margin: 0;
+  color: #d8e3e5;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.store-summary .store-hint {
+  color: #ffd35c;
 }
 
 .home-stage {
@@ -583,14 +660,14 @@ select {
   right: 12px;
   bottom: 14px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 10px;
   min-height: 226px;
   align-items: end;
 }
 
 .customer {
-  min-height: 216px;
+  min-height: 176px;
   padding: 10px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -603,8 +680,8 @@ select {
 }
 
 .face {
-  width: 74px;
-  height: 74px;
+  width: 60px;
+  height: 60px;
   margin: 0 auto 8px;
   border-radius: 50%;
   background:
@@ -622,6 +699,24 @@ select {
 .customer-name {
   text-align: center;
   font-weight: 700;
+}
+
+.trait-tags {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  min-height: 22px;
+  margin-top: 5px;
+}
+
+.trait-tags span {
+  min-width: 22px;
+  border-radius: 999px;
+  padding: 2px 6px;
+  color: #2a1b0e;
+  background: #8fd3c7;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .orders {
@@ -655,7 +750,7 @@ select {
 }
 
 .empty-customer {
-  min-height: 116px;
+  min-height: 154px;
   border-radius: 8px;
   border: 1px dashed rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.04);
@@ -736,6 +831,17 @@ select {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.inventory-item span {
+  display: grid;
+  gap: 2px;
+}
+
+.inventory-item em {
+  color: #ffc46b;
+  font-size: 11px;
+  font-style: normal;
+}
+
 .dish-panel {
   margin-top: 12px;
 }
@@ -770,17 +876,57 @@ select {
 }
 
 .log {
-  min-height: 116px;
-  margin-top: 12px;
+  min-height: 0;
+}
+
+.street-log {
+  position: absolute;
+  z-index: 3;
+  top: clamp(72px, 7dvh, 88px);
+  left: clamp(152px, 31%, 246px);
+  right: 18px;
+  height: clamp(104px, 15dvh, 166px);
+  padding: 10px 12px;
+  border: 1px solid rgba(185, 217, 224, 0.2);
+  border-radius: 8px;
+  background: rgba(10, 12, 18, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.street-log .panel-title {
+  margin-bottom: 6px;
+  font-size: 15px;
 }
 
 .log-list {
   display: grid;
   gap: 5px;
-  max-height: 82px;
-  overflow: hidden;
+  max-height: calc(100% - 26px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
   color: #d9e3e7;
   font-size: 13px;
+  line-height: 1.35;
+  scrollbar-gutter: stable;
+}
+
+.log-list div {
+  overflow-wrap: anywhere;
+}
+
+.log-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.log-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.log-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 211, 92, 0.58);
+  border-radius: 999px;
 }
 
 .upgrade-panel {
@@ -1132,7 +1278,7 @@ select {
   }
 
   .customer-lane {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
 
   .street {
@@ -1201,5 +1347,194 @@ select {
 
   .avatar-actions {
     grid-column: 1 / -1;
+  }
+
+  #gameView:not(.hidden) {
+    grid-template-rows: auto auto minmax(276px, 1fr) auto auto auto;
+    gap: 7px;
+  }
+
+  #gameView .topbar {
+    align-items: center;
+  }
+
+  #gameView h1 {
+    font-size: 22px;
+  }
+
+  #gameView select {
+    min-width: 92px;
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+
+  #gameView .hud {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  #gameView .meter {
+    min-height: 46px;
+    padding: 6px;
+  }
+
+  #gameView .meter span {
+    margin-bottom: 2px;
+    font-size: 10px;
+  }
+
+  #gameView .meter strong {
+    font-size: 15px;
+  }
+
+  #gameView .street {
+    min-height: 0;
+  }
+
+  #gameView .street-log {
+    top: 66px;
+    left: 10px;
+    right: 10px;
+    height: 96px;
+    padding: 8px 10px;
+  }
+
+  #gameView .street-log .panel-title {
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+
+  #gameView .log-list {
+    max-height: calc(100% - 21px);
+    font-size: 12px;
+  }
+
+  #gameView .customer-lane {
+    left: 10px;
+    right: 10px;
+    bottom: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+    gap: 6px;
+    min-height: 128px;
+  }
+
+  #gameView .customer {
+    min-height: 132px;
+    padding: 6px;
+  }
+
+  #gameView .face {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 5px;
+    border-width: 3px;
+  }
+
+  #gameView .customer-name {
+    font-size: 12px;
+  }
+
+  #gameView .trait-tags {
+    min-height: 17px;
+    margin-top: 3px;
+  }
+
+  #gameView .trait-tags span {
+    min-width: 18px;
+    padding: 1px 4px;
+    font-size: 10px;
+  }
+
+  #gameView .orders {
+    gap: 3px;
+    margin: 5px 0;
+  }
+
+  #gameView .chip {
+    padding: 3px 5px;
+    font-size: 10px;
+  }
+
+  #gameView .empty-customer {
+    min-height: 126px;
+  }
+
+  #gameView .service {
+    grid-template-columns: minmax(0, 1fr) minmax(94px, 0.42fr);
+    gap: 6px;
+  }
+
+  #gameView .panel {
+    padding: 8px;
+  }
+
+  #gameView .panel-title {
+    margin-bottom: 5px;
+    font-size: 12px;
+  }
+
+  #gameView .stations {
+    gap: 6px;
+  }
+
+  #gameView .station {
+    min-height: 88px;
+    padding: 7px;
+  }
+
+  #gameView .station strong,
+  #gameView .inventory-item,
+  #gameView .dish-buttons button,
+  #gameView .controls button {
+    font-size: 12px;
+  }
+
+  #gameView .station button {
+    min-height: 34px;
+    margin-top: 5px;
+    padding: 5px 6px;
+  }
+
+  #gameView .slot {
+    min-height: 19px;
+    margin-top: 5px;
+  }
+
+  #gameView .slot-fill {
+    height: 19px;
+    padding-left: 5px;
+    font-size: 10px;
+  }
+
+  #gameView .inventory {
+    gap: 5px;
+  }
+
+  #gameView .inventory-item {
+    padding: 6px;
+  }
+
+  #gameView .inventory-item em {
+    font-size: 10px;
+  }
+
+  #gameView .dish-buttons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  #gameView .dish-buttons button {
+    min-height: 42px;
+    padding: 5px 6px;
+  }
+
+  #gameView .controls {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  #gameView .controls button {
+    min-height: 38px;
+    padding: 6px;
   }
 }

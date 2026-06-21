@@ -22,6 +22,12 @@ export interface EconomyEffects {
   complaintReduce?: number;
   rating?: number;
   tipBonus?: number;
+  customerAttractBonus?: number;
+  maxWaitingCustomers?: number;
+  prepCacheLimit?: number;
+  pickyAcceptance?: number;
+  leftoverLossReduce?: number;
+  visualStage?: number;
 }
 
 export interface UpgradeMilestone {
@@ -130,6 +136,24 @@ export interface StoreUpgradeConfig {
   effectsPerLevel: EconomyEffects;
   upgradeMilestones?: UpgradeMilestone[];
   tags?: string[];
+}
+
+export interface StoreVisualStage {
+  level: number;
+  name: string;
+  minUpgradeProgress: number;
+}
+
+export interface StoreVisualStageSummary {
+  level: number;
+  name: string;
+  upgradeProgress: number;
+  mainEffectText: string;
+  nextLevel?: number;
+  nextName?: string;
+  levelsToNextStage: number;
+  nextStageGapText: string;
+  recommendationText?: string;
 }
 
 export interface PlayerAvatarConfig {

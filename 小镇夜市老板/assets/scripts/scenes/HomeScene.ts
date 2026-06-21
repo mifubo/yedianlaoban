@@ -1,9 +1,17 @@
 import { _decorator, Component, director, Label } from 'cc';
 import { ConfigLoader } from '../core/config/ConfigLoader';
-import { AvatarGender, AvatarId, CosmeticItemConfig, CosmeticItemId, RuntimeConfig } from '../core/config/types';
+import {
+  AvatarGender,
+  AvatarId,
+  CosmeticItemConfig,
+  CosmeticItemId,
+  RuntimeConfig,
+  StoreVisualStageSummary,
+} from '../core/config/types';
 import { GameContext } from '../core/game/GameContext';
 import { SceneName } from '../core/game/SceneNames';
 import { PlayerSaveData, SaveSystem } from '../core/save/SaveSystem';
+import { EconomySystem } from '../systems/EconomySystem';
 
 const { ccclass, property } = _decorator;
 
@@ -25,6 +33,7 @@ export interface HomeSceneSnapshot {
     name: string;
     slot: string;
   }[];
+  storeStage: StoreVisualStageSummary | null;
 }
 
 @ccclass('HomeScene')
@@ -46,6 +55,18 @@ export class HomeScene extends Component {
 
   @property(Label)
   equippedCosmeticsLabel: Label | null = null;
+
+  @property(Label)
+  storeStageLabel: Label | null = null;
+
+  @property(Label)
+  storeEffectLabel: Label | null = null;
+
+  @property(Label)
+  storeNextStageLabel: Label | null = null;
+
+  @property(Label)
+  storeUpgradeHintLabel: Label | null = null;
 
   private isReady = false;
   private configs: RuntimeConfig | null = null;
@@ -105,6 +126,7 @@ export class HomeScene extends Component {
         name: cosmetic.name,
         slot: cosmetic.slot,
       })),
+      storeStage: this.getStoreStageSnapshot(),
     };
   }
 
@@ -139,6 +161,22 @@ export class HomeScene extends Component {
     if (this.equippedCosmeticsLabel) {
       this.equippedCosmeticsLabel.string = snapshot.equippedCosmetics.map((item) => item.name).join(' / ') || '未装备装扮';
     }
+
+    if (this.storeStageLabel) {
+      this.storeStageLabel.string = snapshot.storeStage ? `Lv.${snapshot.storeStage.level} ${snapshot.storeStage.name}` : '';
+    }
+
+    if (this.storeEffectLabel) {
+      this.storeEffectLabel.string = snapshot.storeStage?.mainEffectText ?? '';
+    }
+
+    if (this.storeNextStageLabel) {
+      this.storeNextStageLabel.string = snapshot.storeStage?.nextStageGapText ?? '';
+    }
+
+    if (this.storeUpgradeHintLabel) {
+      this.storeUpgradeHintLabel.string = snapshot.storeStage?.recommendationText ?? '';
+    }
   }
 
   private getPlayableLevelId(saveData: PlayerSaveData): number {
@@ -171,5 +209,14 @@ export class HomeScene extends Component {
         return Boolean(cosmetic && this.saveData.ownedCosmeticIds.includes(cosmetic.id));
       })
       .sort((a, b) => a.slot.localeCompare(b.slot));
+  }
+
+  private getStoreStageSnapshot(): StoreVisualStageSummary | null {
+    if (!this.configs) {
+      return null;
+    }
+
+    const currentLevelId = this.getPlayableLevelId(this.saveData);
+    return EconomySystem.getStoreVisualStageSummary(this.configs, this.saveData, currentLevelId);
   }
 }

@@ -17,6 +17,20 @@ export const DEFAULT_INGREDIENT_COST_RATE = 0.32;
 export const DEFAULT_EQUIPMENT_SLOT_LEVEL_STEP = 2;
 export const SETTLEMENT_AD_BONUS_RATE = 0.5;
 export const SETTLEMENT_AD_GOAL_CAP_RATE = 0.6;
+export const DEFAULT_MAX_WAITING_CUSTOMERS = 4;
+export const DEFAULT_PREP_CACHE_LIMIT = 3;
+export const FRONT30_CUSTOMER_ATTRACT_CAP = 0.15;
+export const LATE_CUSTOMER_ATTRACT_CAP = 0.25;
+export const MIDGAME_LEFTOVER_LOSS_RATE = 0.4;
+export const LATEGAME_LEFTOVER_LOSS_RATE = 0.6;
+export const MAX_LEFTOVER_LOSS_REDUCE = 0.65;
+export const STORE_VISUAL_STAGES = [
+  { level: 1, name: '破旧推车', minUpgradeProgress: 0 },
+  { level: 2, name: '亮灯小摊', minUpgradeProgress: 4 },
+  { level: 3, name: '夜市摊位', minUpgradeProgress: 9 },
+  { level: 4, name: '老街档口', minUpgradeProgress: 16 },
+  { level: 5, name: '网红夜市摊', minUpgradeProgress: 25 },
+];
 
 export function loadConfigs() {
   const levels = readJson('levels_mvp.json');
@@ -72,6 +86,8 @@ export function createDefaultSaveData() {
       store_tables: 1,
       store_fridge: 1,
       store_cleanliness: 1,
+      store_prep_table: 1,
+      store_facade: 1,
     },
     ownedCosmeticIds: [],
     equippedCosmeticIds: {},
@@ -99,28 +115,34 @@ export function simulateLevel(configs, levelId, saveData = createDefaultSaveData
     state.elapsedSec += SIM_DELTA_SEC;
     state.timeRemainingSec = Math.max(0, getTotalDurationSec(state) - state.elapsedSec);
     spawnDueCustomers(configs, state);
-    updateCooking(state, SIM_DELTA_SEC);
+    updateCooking(configs, state, SIM_DELTA_SEC);
     serveReadyCustomers(configs, state);
     updateCustomerPatience(configs, state, SIM_DELTA_SEC);
 
     if (state.timeRemainingSec <= 0 || shouldEndBecauseQueueFinished(state)) {
-      endBusiness(state);
+      endBusiness(configs, state);
     }
   }
 
   const settlementAdBonusCoins =
-    state.outcome === 'success' ? calculateSettlementAdBonus(state.level, Math.max(0, state.earnedCoins)) : 0;
+    state.outcome === 'success' ? calculateSettlementAdBonus(state.level, Math.max(0, state.netProfitCoins)) : 0;
 
   return {
     levelId: state.level.id,
     outcome: state.outcome,
-    stars: state.outcome === 'success' ? calculateStars(state.level, state.earnedCoins) : 0,
-    earnedCoins: state.earnedCoins,
+    stars: state.outcome === 'success' ? calculateStars(state.level, state.netProfitCoins) : 0,
+    earnedCoins: state.netProfitCoins,
+    netProfitCoins: state.netProfitCoins,
+    leftoverLossCoins: state.leftoverLoss.lossCoins,
+    remainingDishCount: state.leftoverLoss.remainingDishCount,
+    complaintPenaltyCoins: state.complaintPenaltyCoins,
+    grossBusinessCoins: state.earnedCoins,
     settlementAdBonusCoins,
     servedCustomers: state.servedCustomers,
     maxCombo: state.maxCombo,
     angryLeaveCount: state.angryLeaveCount,
     wrongServeCount: state.wrongServeCount,
+    manualPrepDecisionCount: state.manualPrepDecisionCount,
     elapsedSec: Math.round(state.elapsedSec * 10) / 10,
   };
 }
@@ -304,16 +326,25 @@ function createRuntimeState(configs, levelId, saveData) {
     bonusTimeSec: 0,
     timeRemainingSec: level.durationSec,
     earnedCoins: 0,
+    netProfitCoins: 0,
     servedCustomers: 0,
     angryLeaveCount: 0,
     wrongServeCount: 0,
+    complaintPenaltyCoins: 0,
     combo: 0,
     maxCombo: 0,
+    manualPrepDecisionCount: 0,
     customerSerial: 0,
     spawnQueue: [],
     activeCustomers: [],
     equipments: [],
     cookedInventory: {},
+    leftoverLoss: {
+      remainingDishCount: 0,
+      ingredientCost: 0,
+      lossRate: 0,
+      lossCoins: 0,
+    },
     targetDishServedCounts: {},
     rngState: createSeed(level.id),
     outcome: 'fail',
@@ -351,7 +382,7 @@ function buildRuntimeEquipments(configs, state) {
 }
 
 function buildSpawnQueue(configs, state) {
-  const totalCustomers = state.level.modifiers.customerCount;
+  const totalCustomers = getEffectiveCustomerCount(configs, state.saveData, state.level);
   const waveCount = Math.max(1, state.level.modifiers.waveCount ?? 1);
   const spawnWindowSec = Math.max(1, state.level.durationSec * 0.72);
   const items = [];
@@ -374,7 +405,35 @@ function buildSpawnQueue(configs, state) {
   }
 
   ensureTargetDishOrders(state, items);
+  applyEventSpawnTiming(state, items);
   return items.sort((a, b) => a.spawnAtSec - b.spawnAtSec);
+}
+
+function applyEventSpawnTiming(state, items) {
+  if (items.length <= 1) {
+    return;
+  }
+
+  const eventId = state.level.modifiers.eventId;
+  if (eventId !== 'event_influencer_visit' && eventId !== 'event_school_rush') {
+    return;
+  }
+
+  const sortedItems = items.sort((a, b) => a.spawnAtSec - b.spawnAtSec);
+  const frontShare = eventId === 'event_influencer_visit' ? 0.38 : 0.45;
+  const frontWindowSec = Math.min(eventId === 'event_influencer_visit' ? 30 : 34, state.level.durationSec * 0.42);
+  const frontCount = Math.max(1, Math.ceil(sortedItems.length * frontShare));
+
+  for (let index = 0; index < sortedItems.length; index += 1) {
+    const item = sortedItems[index];
+    if (index < frontCount) {
+      const spacingSec = frontCount <= 1 ? 0 : frontWindowSec / frontCount;
+      const jitterSec = index === 0 ? 0 : (random(state) - 0.5) * 0.8;
+      item.spawnAtSec = Math.max(0, index * spacingSec + jitterSec);
+    } else {
+      item.spawnAtSec = Math.max(frontWindowSec, item.spawnAtSec);
+    }
+  }
 }
 
 function getWaveCustomerCount(totalCustomers, waveCount, waveIndex) {
@@ -409,7 +468,7 @@ function spawnDueCustomers(configs, state) {
   while (
     state.spawnQueue.length > 0 &&
     state.spawnQueue[0].spawnAtSec <= state.elapsedSec &&
-    state.activeCustomers.length < 4
+    state.activeCustomers.length < getMaxWaitingCustomers(configs, state.saveData)
   ) {
     const spawnItem = state.spawnQueue.shift();
     const customerConfig = configs.customerById.get(spawnItem.customerId);
@@ -435,7 +494,9 @@ function fillIdleSlots(configs, state) {
 
       const dishId = pickNextDemandedDishForEquipment(configs, state, equipment.configId);
       if (dishId) {
-        startCooking(configs, state, equipment, slot, dishId);
+        if (startCooking(configs, state, equipment, slot, dishId) && state.level.id >= 11) {
+          state.manualPrepDecisionCount += 1;
+        }
       }
     }
   }
@@ -446,6 +507,10 @@ function pickNextDemandedDishForEquipment(configs, state, equipmentId) {
   let bestDishId = null;
   let bestDemand = 0;
   for (const dishId of cookableDishIds) {
+    if (isDishAtPreparedLimit(configs, state, dishId)) {
+      continue;
+    }
+
     const demand = getWaitingDemandCount(state, dishId) - getSupplyCount(state, dishId);
     if (demand > bestDemand) {
       bestDemand = demand;
@@ -456,15 +521,20 @@ function pickNextDemandedDishForEquipment(configs, state, equipmentId) {
 }
 
 function startCooking(configs, state, equipment, slot, dishId) {
+  if (isDishAtPreparedLimit(configs, state, dishId)) {
+    return false;
+  }
+
   const dish = configs.dishById.get(dishId);
   const equipmentConfig = configs.equipmentById.get(equipment.configId);
   slot.status = 'cooking';
   slot.dishId = dishId;
   slot.totalCookTimeSec = getCookDurationSec(configs, state.saveData, dish, equipmentConfig);
   slot.timeRemainingSec = slot.totalCookTimeSec;
+  return true;
 }
 
-function updateCooking(state, deltaSec) {
+function updateCooking(configs, state, deltaSec) {
   for (const equipment of state.equipments) {
     for (const slot of equipment.slots) {
       if (slot.status !== 'cooking' || !slot.dishId) {
@@ -473,7 +543,10 @@ function updateCooking(state, deltaSec) {
 
       slot.timeRemainingSec = Math.max(0, slot.timeRemainingSec - deltaSec);
       if (slot.timeRemainingSec <= 0) {
-        state.cookedInventory[slot.dishId] = (state.cookedInventory[slot.dishId] ?? 0) + 1;
+        state.cookedInventory[slot.dishId] = Math.min(
+          getPreparedDishLimit(configs, state.saveData),
+          (state.cookedInventory[slot.dishId] ?? 0) + 1,
+        );
         slot.status = 'idle';
         slot.dishId = null;
         slot.totalCookTimeSec = 0;
@@ -525,7 +598,9 @@ function updateCustomerPatience(configs, state, deltaSec) {
   for (const customer of leaving) {
     state.angryLeaveCount += 1;
     state.combo = 0;
-    state.earnedCoins = Math.max(0, state.earnedCoins - calculateAngryLeavePenalty(configs, state.saveData));
+    const penalty = calculateAngryLeavePenalty(configs, state.saveData);
+    state.earnedCoins = Math.max(0, state.earnedCoins - penalty);
+    state.complaintPenaltyCoins += penalty;
     state.activeCustomers = state.activeCustomers.filter((item) => item.runtimeId !== customer.runtimeId);
     spawnDueCustomers(configs, state);
   }
@@ -622,12 +697,14 @@ function pickWeighted(state, items) {
   return items[items.length - 1]?.id ?? null;
 }
 
-function endBusiness(state) {
+function endBusiness(configs, state) {
+  state.leftoverLoss = calculateLeftoverLoss(configs, state.saveData, state.level, state.cookedInventory);
+  state.netProfitCoins = Math.max(0, state.earnedCoins - state.leftoverLoss.lossCoins);
   state.phase = 'ended';
-  state.outcome = hasMetMainGoal(state) ? 'success' : 'fail';
+  state.outcome = hasMetMainGoal(state, state.netProfitCoins) ? 'success' : 'fail';
 }
 
-function hasMetMainGoal(state) {
+function hasMetMainGoal(state, netProfitCoins = state.earnedCoins) {
   const { goals } = state.level;
   if (goals.targetDishId && goals.targetDishCount) {
     return (state.targetDishServedCounts[goals.targetDishId] ?? 0) >= goals.targetDishCount;
@@ -638,7 +715,7 @@ function hasMetMainGoal(state) {
   if (goals.served) {
     return state.servedCustomers >= goals.served;
   }
-  return state.earnedCoins >= goals.coin1;
+  return netProfitCoins >= goals.coin1;
 }
 
 export function calculateStars(level, earnedCoins) {
@@ -677,6 +754,10 @@ function getSupplyCount(state, dishId) {
   return cooked + cooking;
 }
 
+function isDishAtPreparedLimit(configs, state, dishId) {
+  return getSupplyCount(state, dishId) >= getPreparedDishLimit(configs, state.saveData);
+}
+
 function createSeed(levelId) {
   return (levelId * 2654435761) >>> 0;
 }
@@ -690,14 +771,20 @@ function random(state) {
   return state.rngState / 0xffffffff;
 }
 
-export function getTotalEconomyEffects(configs, saveData) {
+export function getStoreUpgradeEffects(configs, saveData) {
   const total = {};
-  const equippedOwnedCosmeticIds = new Set();
   for (const storeUpgrade of configs.storeUpgrades) {
     const level = getSavedLevel(saveData.storeUpgradeLevels[storeUpgrade.id], storeUpgrade.maxLevel);
     addEffects(total, scaleEffects(storeUpgrade.effectsPerLevel, Math.max(0, level - 1)));
     addEffects(total, getMilestoneEffects(storeUpgrade, level));
   }
+  return total;
+}
+
+export function getTotalEconomyEffects(configs, saveData) {
+  const total = getStoreUpgradeEffects(configs, saveData);
+  const equippedOwnedCosmeticIds = new Set();
+
   for (const cosmeticId of Object.values(saveData.equippedCosmeticIds)) {
     const cosmetic = configs.cosmeticById.get(cosmeticId);
     if (cosmetic && saveData.ownedCosmeticIds.includes(cosmetic.id)) {
@@ -713,6 +800,111 @@ export function getTotalEconomyEffects(configs, saveData) {
   return total;
 }
 
+export function getEffectiveCustomerCount(configs, saveData, level) {
+  const baseCount = Math.max(1, Math.floor(level.modifiers.customerCount));
+  if (level.id <= 10) {
+    return baseCount;
+  }
+
+  const effects = getStoreUpgradeEffects(configs, saveData);
+  const cap = level.id <= 30 ? FRONT30_CUSTOMER_ATTRACT_CAP : LATE_CUSTOMER_ATTRACT_CAP;
+  const attractBonus = Math.min(cap, Math.max(0, effects.customerAttractBonus ?? 0));
+  const denseFlowBonus = getLevelDenseFlowBonus(configs, level);
+  const eventMultiplier = getLevelEventCustomerCountMultiplier(level);
+  return Math.max(1, Math.floor(baseCount * eventMultiplier * (1 + attractBonus + denseFlowBonus) + 0.0001));
+}
+
+export function getMaxWaitingCustomers(configs, saveData, baseWaitingCustomers = DEFAULT_MAX_WAITING_CUSTOMERS) {
+  const effects = getStoreUpgradeEffects(configs, saveData);
+  const extraSlots = Math.floor(Math.max(0, effects.maxWaitingCustomers ?? 0));
+  return Math.min(8, Math.max(1, Math.floor(baseWaitingCustomers) + extraSlots));
+}
+
+export function getPreparedDishLimit(configs, saveData, baseLimit = DEFAULT_PREP_CACHE_LIMIT) {
+  const effects = getStoreUpgradeEffects(configs, saveData);
+  const extraLimit = Math.floor(Math.max(0, effects.prepCacheLimit ?? 0));
+  return Math.min(8, Math.max(1, Math.floor(baseLimit) + extraLimit));
+}
+
+export function getStoreVisualStageSummary(configs, saveData, levelId = saveData.currentLevelId) {
+  const upgradeProgress = configs.storeUpgrades.reduce((sum, storeUpgrade) => {
+    const level = getSavedLevel(saveData.storeUpgradeLevels[storeUpgrade.id], storeUpgrade.maxLevel);
+    return sum + Math.max(0, level - 1);
+  }, 0);
+  const effects = getStoreUpgradeEffects(configs, saveData);
+  const progressStage = [...STORE_VISUAL_STAGES]
+    .reverse()
+    .find((stage) => upgradeProgress >= stage.minUpgradeProgress) ?? STORE_VISUAL_STAGES[0];
+  const visualStageLevel = Math.min(5, Math.max(1, 1 + Math.floor(Math.max(0, effects.visualStage ?? 0))));
+  const stageLevel = Math.max(progressStage.level, visualStageLevel);
+  const stage = STORE_VISUAL_STAGES.find((item) => item.level === stageLevel) ?? STORE_VISUAL_STAGES[0];
+  const nextStage = STORE_VISUAL_STAGES.find((item) => item.level === stage.level + 1);
+  const levelsToNextStage = nextStage ? Math.max(0, nextStage.minUpgradeProgress - upgradeProgress) : 0;
+  return {
+    level: stage.level,
+    name: stage.name,
+    upgradeProgress,
+    mainEffectText: formatStoreMainEffects(effects),
+    nextLevel: nextStage?.level,
+    nextName: nextStage?.name,
+    levelsToNextStage,
+    nextStageGapText: nextStage
+      ? `还差 ${levelsToNextStage} 次店铺升级到 Lv.${nextStage.level} ${nextStage.name}`
+      : '已达到最高视觉阶段',
+    recommendationText: getStoreUpgradeRecommendation(configs, saveData, levelId),
+  };
+}
+
+export function getStoreUpgradeRecommendation(configs, saveData, levelId = saveData.currentLevelId) {
+  const recommendations = [
+    {
+      levelId: 15,
+      text: '第15关建议补清洁台和备菜台，降低客诉并放宽出餐缓存',
+      targets: [
+        ['store_cleanliness', 2],
+        ['store_prep_table', 2],
+      ],
+    },
+    {
+      levelId: 24,
+      text: '第24关建议补灯牌、桌椅和门面，承接热狗解锁后的客流',
+      targets: [
+        ['store_signboard', 3],
+        ['store_tables', 3],
+        ['store_facade', 2],
+      ],
+    },
+    {
+      levelId: 30,
+      text: '第30关建议店铺进入夜市摊位阶段，优先桌椅、灯牌、备菜台',
+      targets: [
+        ['store_tables', 4],
+        ['store_signboard', 4],
+        ['store_prep_table', 3],
+      ],
+    },
+  ];
+  const recommendation = recommendations.find((item) => item.levelId === levelId);
+  if (!recommendation) {
+    return undefined;
+  }
+
+  const missingTargets = recommendation.targets
+    .map(([storeUpgradeId, targetLevel]) => {
+      const config = configs.storeUpgradeById.get(storeUpgradeId);
+      if (!config) {
+        return null;
+      }
+      const currentLevel = getSavedLevel(saveData.storeUpgradeLevels[storeUpgradeId], config.maxLevel);
+      return currentLevel < targetLevel ? `${config.name}Lv.${targetLevel}` : null;
+    })
+    .filter(Boolean);
+
+  return missingTargets.length > 0
+    ? `${recommendation.text}（推荐：${missingTargets.join(' / ')}）`
+    : `第${levelId}关店铺推荐已达标`;
+}
+
 export function calculateCustomerRewardBreakdown(configs, saveData, level, customer, orderDishIds, patienceRatio, combo) {
   const effects = getTotalEconomyEffects(configs, saveData);
   const grossSales = orderDishIds.reduce((sum, dishId) => {
@@ -726,8 +918,12 @@ export function calculateCustomerRewardBreakdown(configs, saveData, level, custo
   const quickTipRate = Math.min(1, Math.max(0, patienceRatio)) * MAX_QUICK_TIP_BONUS;
   const comboTipRate = Math.min(MAX_COMBO_TIP_BONUS, Math.max(0, combo) * COMBO_TIP_BONUS_PER_STEP);
   const levelRewardMultiplier = level.modifiers.rewardMultiplier ?? 1;
-  const tips = Math.round(grossSales * (quickTipRate + comboTipRate + (effects.tipBonus ?? 0)) * customer.tipMultiplier * levelRewardMultiplier);
-  const adjustedSales = grossSales * customer.tipMultiplier * levelRewardMultiplier;
+  const traitTipRate = getCustomerTraitTipBonus(customer, combo);
+  const tipRate = quickTipRate + comboTipRate + traitTipRate + getLevelEventTipBonus(level) + (effects.tipBonus ?? 0);
+  const ticketMultiplier =
+    getCustomerTicketMultiplier(customer) * getPickyCustomerTicketMultiplier(configs, saveData, customer) * getLevelEventPriceMultiplier(level);
+  const tips = Math.round(grossSales * tipRate * customer.tipMultiplier * getPickyCustomerTipMultiplier(configs, saveData, customer) * levelRewardMultiplier);
+  const adjustedSales = grossSales * customer.tipMultiplier * ticketMultiplier * levelRewardMultiplier;
   const serviceBonus = SERVICE_COIN_BONUS + Math.floor(Math.max(0, effects.rating ?? 0) * 0.5);
   return {
     grossSales: Math.round(adjustedSales),
@@ -741,7 +937,7 @@ export function calculateCustomerRewardBreakdown(configs, saveData, level, custo
 function getCustomerPatienceSec(configs, saveData, level, customer) {
   const effects = getTotalEconomyEffects(configs, saveData);
   const patienceBonus = Math.min(0.6, Math.max(0, effects.patienceBonus ?? 0));
-  return customer.basePatience * (level.modifiers.patienceMultiplier ?? 1) * (1 + patienceBonus);
+  return customer.basePatience * (level.modifiers.patienceMultiplier ?? 1) * (1 + patienceBonus) * getCustomerPatienceTraitMultiplier(configs, saveData, level, customer);
 }
 
 function calculateAngryLeavePenalty(configs, saveData) {
@@ -750,11 +946,183 @@ function calculateAngryLeavePenalty(configs, saveData) {
   return Math.max(0, Math.round(4 * (1 - complaintReduce)));
 }
 
+export function calculateLeftoverLoss(configs, saveData, level, cookedInventory) {
+  const lossRate = getLeftoverLossRate(configs, saveData, level);
+  const effects = getTotalEconomyEffects(configs, saveData);
+  let remainingDishCount = 0;
+  let ingredientCost = 0;
+
+  for (const [dishId, count] of Object.entries(cookedInventory)) {
+    const safeCount = Math.max(0, Math.floor(count ?? 0));
+    if (safeCount <= 0) {
+      continue;
+    }
+
+    const dish = configs.dishById.get(dishId);
+    if (!dish) {
+      continue;
+    }
+
+    remainingDishCount += safeCount;
+    ingredientCost += getDishIngredientCostAtLevel(dish, saveData.dishLevels[dish.id] ?? 1, effects) * safeCount;
+  }
+
+  return {
+    remainingDishCount,
+    ingredientCost,
+    lossRate,
+    lossCoins: Math.round(ingredientCost * lossRate),
+  };
+}
+
+export function getLeftoverLossRate(configs, saveData, level) {
+  const baseRate = getBaseLeftoverLossRate(level.id);
+  if (baseRate <= 0) {
+    return 0;
+  }
+
+  const effects = getStoreUpgradeEffects(configs, saveData);
+  const reduce = Math.min(MAX_LEFTOVER_LOSS_REDUCE, Math.max(0, effects.leftoverLossReduce ?? 0));
+  return Math.max(0, baseRate * (1 - reduce));
+}
+
+export function getBaseLeftoverLossRate(levelId) {
+  if (levelId <= 10) {
+    return 0;
+  }
+  return levelId <= 20 ? MIDGAME_LEFTOVER_LOSS_RATE : LATEGAME_LEFTOVER_LOSS_RATE;
+}
+
+function hasCustomerTrait(customer, ...traits) {
+  return traits.some((trait) => customer?.traits?.includes(trait));
+}
+
+function getLevelDenseFlowBonus(configs, level) {
+  const denseWeight = Object.entries(level.customerMix).reduce((sum, [customerId, weight]) => {
+    const customer = configs.customerById.get(customerId);
+    return hasCustomerTrait(customer, 'dense_flow') ? sum + Math.max(0, weight ?? 0) : sum;
+  }, 0);
+  return Math.min(0.16, denseWeight * 0.12);
+}
+
+function getLevelEventCustomerCountMultiplier(level) {
+  if (level.modifiers.eventId === 'event_rain_light') {
+    return 0.9;
+  }
+  if (level.modifiers.eventId === 'event_school_rush') {
+    return 1.12;
+  }
+  return 1;
+}
+
+function getLevelEventPriceMultiplier(level) {
+  return level.modifiers.eventId === 'event_rain_light' ? 1.15 : 1;
+}
+
+function getLevelEventTipBonus(level) {
+  if (level.modifiers.eventId === 'event_rain_light') {
+    return 0.12;
+  }
+  if (level.modifiers.eventId === 'event_influencer_visit') {
+    return 0.03;
+  }
+  if (level.modifiers.eventId === 'event_hygiene_check') {
+    return 0.02;
+  }
+  return 0;
+}
+
+function getPickyReadiness(configs, saveData) {
+  const effects = getStoreUpgradeEffects(configs, saveData);
+  return Math.min(
+    1,
+    Math.max(0, effects.pickyAcceptance ?? 0) +
+      Math.max(0, effects.visualStage ?? 0) * 0.08 +
+      Math.max(0, effects.rating ?? 0) * 0.015,
+  );
+}
+
+function getCustomerPatienceTraitMultiplier(configs, saveData, level, customer) {
+  let multiplier = 1;
+  if (hasCustomerTrait(customer, 'low_patience', 'pressure_intro')) {
+    multiplier *= 0.92;
+  }
+  if (hasCustomerTrait(customer, 'picky', 'hygiene_sensitive', 'facade_sensitive')) {
+    const requiredReadiness = level.modifiers.eventId === 'event_hygiene_check' ? 0.28 : 0.18;
+    if (getPickyReadiness(configs, saveData) < requiredReadiness) {
+      multiplier *= 0.82;
+    }
+  }
+  return multiplier;
+}
+
+function getCustomerTraitTipBonus(customer, combo) {
+  let bonus = 0;
+  if (hasCustomerTrait(customer, 'low_patience', 'pressure_intro')) {
+    bonus += 0.08;
+  }
+  if (hasCustomerTrait(customer, 'combo_bonus', 'loyal') && combo >= 2) {
+    bonus += Math.min(0.18, combo * 0.025);
+  }
+  return bonus;
+}
+
+function getCustomerTicketMultiplier(customer) {
+  return hasCustomerTrait(customer, 'lower_ticket') ? 0.9 : 1;
+}
+
+function getPickyCustomerTicketMultiplier(configs, saveData, customer) {
+  if (!hasCustomerTrait(customer, 'picky', 'hygiene_sensitive', 'facade_sensitive')) {
+    return 1;
+  }
+  return getPickyReadiness(configs, saveData) >= 0.18 ? 1 : 0.92;
+}
+
+function getPickyCustomerTipMultiplier(configs, saveData, customer) {
+  if (!hasCustomerTrait(customer, 'picky', 'hygiene_sensitive', 'facade_sensitive')) {
+    return 1;
+  }
+  return getPickyReadiness(configs, saveData) >= 0.18 ? 1 : 0.86;
+}
+
 export function calculateSettlementAdBonus(level, baseRewardCoins) {
   if (baseRewardCoins <= 0) {
     return 0;
   }
   return Math.max(10, Math.floor(Math.min(baseRewardCoins * SETTLEMENT_AD_BONUS_RATE, level.goals.coin1 * SETTLEMENT_AD_GOAL_CAP_RATE) / 10) * 10);
+}
+
+function formatStoreMainEffects(effects) {
+  const parts = [];
+  if (effects.customerAttractBonus) {
+    parts.push(`客流+${Math.round(effects.customerAttractBonus * 100)}%`);
+  }
+  if (effects.priceBonus) {
+    parts.push(`售价+${Math.round(effects.priceBonus * 100)}%`);
+  }
+  const waitingSlots = Math.floor(effects.maxWaitingCustomers ?? 0);
+  if (waitingSlots > 0) {
+    parts.push(`排队上限+${waitingSlots}`);
+  }
+  if (effects.prepCacheLimit) {
+    parts.push(`备菜上限+${Math.floor(effects.prepCacheLimit)}`);
+  }
+  if (effects.costReduce) {
+    parts.push(`食材成本-${Math.round(effects.costReduce * 100)}%`);
+  }
+  if (effects.complaintReduce) {
+    parts.push(`客诉惩罚-${Math.round(effects.complaintReduce * 100)}%`);
+  }
+  if (effects.pickyAcceptance) {
+    parts.push(`挑剔接受+${Math.round(effects.pickyAcceptance * 100)}%`);
+  }
+  if (effects.leftoverLossReduce) {
+    parts.push(`剩菜损耗-${Math.round(effects.leftoverLossReduce * 100)}%`);
+  }
+  if (effects.rating) {
+    parts.push(`口碑+${Math.round(effects.rating * 10) / 10}`);
+  }
+  return parts.join('，') || '基础摊位';
 }
 
 export function getDishPriceAtLevel(dish, level, effects = {}) {
@@ -846,6 +1214,12 @@ function scaleEffects(effects, scale) {
     complaintReduce: (effects.complaintReduce ?? 0) * scale,
     rating: (effects.rating ?? 0) * scale,
     tipBonus: (effects.tipBonus ?? 0) * scale,
+    customerAttractBonus: (effects.customerAttractBonus ?? 0) * scale,
+    maxWaitingCustomers: (effects.maxWaitingCustomers ?? 0) * scale,
+    prepCacheLimit: (effects.prepCacheLimit ?? 0) * scale,
+    pickyAcceptance: (effects.pickyAcceptance ?? 0) * scale,
+    leftoverLossReduce: (effects.leftoverLossReduce ?? 0) * scale,
+    visualStage: (effects.visualStage ?? 0) * scale,
   };
 }
 
@@ -860,6 +1234,12 @@ function addEffects(target, source) {
   target.complaintReduce = (target.complaintReduce ?? 0) + (source.complaintReduce ?? 0);
   target.rating = (target.rating ?? 0) + (source.rating ?? 0);
   target.tipBonus = (target.tipBonus ?? 0) + (source.tipBonus ?? 0);
+  target.customerAttractBonus = (target.customerAttractBonus ?? 0) + (source.customerAttractBonus ?? 0);
+  target.maxWaitingCustomers = (target.maxWaitingCustomers ?? 0) + (source.maxWaitingCustomers ?? 0);
+  target.prepCacheLimit = (target.prepCacheLimit ?? 0) + (source.prepCacheLimit ?? 0);
+  target.pickyAcceptance = (target.pickyAcceptance ?? 0) + (source.pickyAcceptance ?? 0);
+  target.leftoverLossReduce = (target.leftoverLossReduce ?? 0) + (source.leftoverLossReduce ?? 0);
+  target.visualStage = (target.visualStage ?? 0) + (source.visualStage ?? 0);
 }
 
 function roundTo10(value) {

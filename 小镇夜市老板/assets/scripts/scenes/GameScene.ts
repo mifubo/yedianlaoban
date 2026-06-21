@@ -9,6 +9,7 @@ import {
   EquipmentId,
   LevelConfig,
   RuntimeConfig,
+  StoreVisualStageSummary,
 } from '../core/config/types';
 import { GameContext, GameResumeState } from '../core/game/GameContext';
 import { buildLevelResult } from '../core/game/GameSession';
@@ -56,6 +57,7 @@ interface CustomerSnapshot {
   runtimeId: string;
   name: string;
   orderNames: string[];
+  traitLabels: string[];
   patienceRemainingSec: number;
   maxPatienceSec: number;
 }
@@ -82,9 +84,16 @@ export interface GameSceneSnapshot {
   servedCustomers: number;
   angryLeaveCount: number;
   wrongServeCount: number;
+  complaintPenaltyCoins: number;
+  leftoverLossCoins: number;
+  netProfitCoins: number;
   combo: number;
   maxCombo: number;
   cookedInventory: Record<DishId, number>;
+  preparedDishLimit: number;
+  leftoverLossRate: number;
+  maxWaitingCustomers: number;
+  storeStage: StoreVisualStageSummary | null;
   customers: CustomerSnapshot[];
   equipments: EquipmentSnapshot[];
   pendingSpawnCount: number;
@@ -115,6 +124,7 @@ export class GameScene extends Component {
   private servedCustomers = 0;
   private angryLeaveCount = 0;
   private wrongServeCount = 0;
+  private complaintPenaltyCoins = 0;
   private combo = 0;
   private maxCombo = 0;
   private customerSerial = 0;
@@ -183,16 +193,21 @@ export class GameScene extends Component {
       return;
     }
 
-    const outcome = this.hasMetMainGoal() ? 'success' : 'fail';
+    const leftoverLoss = this.calculateLeftoverLoss();
+    const netProfitCoins = Math.max(0, this.earnedCoins - leftoverLoss.lossCoins);
+    const outcome = this.hasMetMainGoal(netProfitCoins) ? 'success' : 'fail';
     this.phase = 'ended';
     GameContext.instance.lastResult = buildLevelResult({
       level: this.level,
       outcome,
-      earnedCoins: this.earnedCoins,
+      earnedCoins: netProfitCoins,
       servedCustomers: this.servedCustomers,
       maxCombo: this.maxCombo,
       angryLeaveCount: this.angryLeaveCount,
       wrongServeCount: this.wrongServeCount,
+      complaintPenaltyCoins: this.complaintPenaltyCoins,
+      leftoverLossCoins: leftoverLoss.lossCoins,
+      remainingDishCount: leftoverLoss.remainingDishCount,
     });
     if (outcome === 'fail') {
       GameContext.instance.setFailedLevelResumeState(this.createResumeState());
@@ -244,6 +259,9 @@ export class GameScene extends Component {
 
     const dishId = this.pickNextDishForEquipment(equipmentId);
     if (!dishId) {
+      if (this.level && this.level.id >= 11) {
+        this.log('No current demand gap; choose a dish button to prep manually.');
+      }
       return false;
     }
 
@@ -317,6 +335,7 @@ export class GameScene extends Component {
   }
 
   getSnapshot(): GameSceneSnapshot {
+    const leftoverLoss = this.calculateLeftoverLoss();
     return {
       phase: this.phase,
       levelId: this.level?.id ?? null,
@@ -325,13 +344,24 @@ export class GameScene extends Component {
       servedCustomers: this.servedCustomers,
       angryLeaveCount: this.angryLeaveCount,
       wrongServeCount: this.wrongServeCount,
+      complaintPenaltyCoins: this.complaintPenaltyCoins,
+      leftoverLossCoins: leftoverLoss.lossCoins,
+      netProfitCoins: Math.max(0, this.earnedCoins - leftoverLoss.lossCoins),
       combo: this.combo,
       maxCombo: this.maxCombo,
       cookedInventory: { ...this.cookedInventory } as Record<DishId, number>,
+      preparedDishLimit: this.getPreparedDishLimit(),
+      leftoverLossRate: this.getLeftoverLossRate(),
+      maxWaitingCustomers: this.getMaxWaitingCustomers(),
+      storeStage:
+        this.configs && this.saveData
+          ? EconomySystem.getStoreVisualStageSummary(this.configs, this.saveData, this.level?.id ?? this.saveData.currentLevelId)
+          : null,
       customers: this.activeCustomers.map((customer) => ({
         runtimeId: customer.runtimeId,
         name: customer.name,
         orderNames: customer.orderDishIds.map((dishId) => this.getDishName(dishId)),
+        traitLabels: EconomySystem.getCustomerTraitLabels(this.getCustomerConfig(customer.configId)),
         patienceRemainingSec: this.round1(customer.patienceRemainingSec),
         maxPatienceSec: this.round1(customer.maxPatienceSec),
       })),
@@ -361,6 +391,7 @@ export class GameScene extends Component {
       earnedCoins: Math.max(this.earnedCoins, this.level.goals.coin1),
       servedCustomers: Math.max(this.servedCustomers, this.level.goals.served ?? 0),
       maxCombo: Math.max(this.maxCombo, this.level.goals.combo ?? 0),
+      complaintPenaltyCoins: this.complaintPenaltyCoins,
     });
     GameContext.instance.clearFailedLevelResumeState();
     director.loadScene(SceneName.Result);
@@ -379,6 +410,7 @@ export class GameScene extends Component {
       maxCombo: this.maxCombo,
       angryLeaveCount: Math.max(this.angryLeaveCount, 1),
       wrongServeCount: this.wrongServeCount,
+      complaintPenaltyCoins: this.complaintPenaltyCoins,
     });
     GameContext.instance.setFailedLevelResumeState(this.createResumeState());
     director.loadScene(SceneName.Result);
@@ -435,6 +467,7 @@ export class GameScene extends Component {
     this.servedCustomers = 0;
     this.angryLeaveCount = 0;
     this.wrongServeCount = 0;
+    this.complaintPenaltyCoins = 0;
     this.combo = 0;
     this.maxCombo = 0;
     this.customerSerial = 0;
@@ -460,6 +493,7 @@ export class GameScene extends Component {
       servedCustomers: this.servedCustomers,
       angryLeaveCount: this.angryLeaveCount,
       wrongServeCount: this.wrongServeCount,
+      complaintPenaltyCoins: this.complaintPenaltyCoins,
       combo: this.combo,
       maxCombo: this.maxCombo,
       customerSerial: this.customerSerial,
@@ -503,6 +537,7 @@ export class GameScene extends Component {
     this.servedCustomers = Math.max(0, state.servedCustomers);
     this.angryLeaveCount = Math.max(0, state.angryLeaveCount);
     this.wrongServeCount = Math.max(0, state.wrongServeCount);
+    this.complaintPenaltyCoins = Math.max(0, state.complaintPenaltyCoins ?? 0);
     this.combo = Math.max(0, state.combo);
     this.maxCombo = Math.max(0, state.maxCombo);
     this.customerSerial = Math.max(0, state.customerSerial);
@@ -580,7 +615,10 @@ export class GameScene extends Component {
       return [];
     }
 
-    const totalCustomers = this.level.modifiers.customerCount;
+    const totalCustomers =
+      this.saveData && this.configs
+        ? EconomySystem.getEffectiveCustomerCount(this.configs, this.saveData, this.level)
+        : this.level.modifiers.customerCount;
     const waveCount = Math.max(1, this.level.modifiers.waveCount ?? 1);
     const spawnWindowSec = Math.max(1, this.level.durationSec * 0.72);
     const items: SpawnPlanItem[] = [];
@@ -603,8 +641,36 @@ export class GameScene extends Component {
     }
 
     this.ensureTargetDishOrders(items);
+    this.applyEventSpawnTiming(items);
 
     return items.sort((a, b) => a.spawnAtSec - b.spawnAtSec);
+  }
+
+  private applyEventSpawnTiming(items: SpawnPlanItem[]): void {
+    if (!this.level || items.length <= 1) {
+      return;
+    }
+
+    const eventId = this.level.modifiers.eventId;
+    if (eventId !== 'event_influencer_visit' && eventId !== 'event_school_rush') {
+      return;
+    }
+
+    const sortedItems = items.sort((a, b) => a.spawnAtSec - b.spawnAtSec);
+    const frontShare = eventId === 'event_influencer_visit' ? 0.38 : 0.45;
+    const frontWindowSec = Math.min(eventId === 'event_influencer_visit' ? 30 : 34, this.level.durationSec * 0.42);
+    const frontCount = Math.max(1, Math.ceil(sortedItems.length * frontShare));
+
+    for (let index = 0; index < sortedItems.length; index += 1) {
+      const item = sortedItems[index];
+      if (index < frontCount) {
+        const spacingSec = frontCount <= 1 ? 0 : frontWindowSec / frontCount;
+        const jitterSec = index === 0 ? 0 : (this.random() - 0.5) * 0.8;
+        item.spawnAtSec = Math.max(0, index * spacingSec + jitterSec);
+      } else {
+        item.spawnAtSec = Math.max(frontWindowSec, item.spawnAtSec);
+      }
+    }
   }
 
   private getWaveCustomerCount(totalCustomers: number, waveCount: number, waveIndex: number): number {
@@ -644,7 +710,7 @@ export class GameScene extends Component {
     while (
       this.spawnQueue.length > 0 &&
       this.spawnQueue[0].spawnAtSec <= this.elapsedSec &&
-      this.activeCustomers.length < Math.max(1, this.maxWaitingCustomers)
+      this.activeCustomers.length < this.getMaxWaitingCustomers()
     ) {
       const spawnItem = this.spawnQueue.shift();
       if (!spawnItem) {
@@ -722,6 +788,11 @@ export class GameScene extends Component {
       return false;
     }
 
+    if (this.isDishAtPreparedLimit(dishId)) {
+      this.log(`${dish.name} has reached prep cache limit.`);
+      return false;
+    }
+
     slot.status = 'cooking';
     slot.dishId = dishId;
     slot.totalCookTimeSec = this.getCookDurationSec(dish);
@@ -768,6 +839,7 @@ export class GameScene extends Component {
     if (this.configs && this.saveData) {
       const penalty = EconomySystem.calculateAngryLeavePenalty(this.configs, this.saveData);
       this.earnedCoins = Math.max(0, this.earnedCoins - penalty);
+      this.complaintPenaltyCoins += penalty;
       if (penalty > 0) {
         this.log(`${customer.name} left angry, complaint penalty -${penalty} coins.`);
       }
@@ -786,6 +858,7 @@ export class GameScene extends Component {
     if (this.configs && this.saveData) {
       const penalty = EconomySystem.calculateWrongServePenalty(this.configs, this.saveData);
       this.earnedCoins = Math.max(0, this.earnedCoins - penalty);
+      this.complaintPenaltyCoins += penalty;
     }
     customer.patienceRemainingSec = Math.max(0, customer.patienceRemainingSec - 2);
     this.log(`Wrong serve attempt for ${customer.name}.`);
@@ -816,7 +889,7 @@ export class GameScene extends Component {
 
     const cookableDishIds = this.level.dishPool.filter((dishId) => {
       const dish = this.configs?.dishById.get(dishId);
-      return dish?.stationId === equipmentId;
+      return dish?.stationId === equipmentId && !this.isDishAtPreparedLimit(dishId);
     });
     if (cookableDishIds.length === 0) {
       return null;
@@ -832,7 +905,11 @@ export class GameScene extends Component {
       }
     }
 
-    return bestDishId ?? cookableDishIds[0];
+    if (bestDemand > 0) {
+      return bestDishId;
+    }
+
+    return this.level.id <= 10 ? (cookableDishIds[0] ?? null) : null;
   }
 
   private getWaitingDemandCount(dishId: DishId): number {
@@ -846,6 +923,10 @@ export class GameScene extends Component {
 
   private getSupplyCount(dishId: DishId): number {
     return this.getCookedDishCount(dishId) + this.getCookingDishCount(dishId);
+  }
+
+  private isDishAtPreparedLimit(dishId: DishId): boolean {
+    return this.getSupplyCount(dishId) >= this.getPreparedDishLimit();
   }
 
   private getCookingDishCount(dishId: DishId): number {
@@ -880,7 +961,7 @@ export class GameScene extends Component {
   }
 
   private addCookedDish(dishId: DishId): void {
-    this.cookedInventory[dishId] = this.getCookedDishCount(dishId) + 1;
+    this.cookedInventory[dishId] = Math.min(this.getPreparedDishLimit(), this.getCookedDishCount(dishId) + 1);
   }
 
   private getCookedDishCount(dishId: DishId): number {
@@ -985,7 +1066,7 @@ export class GameScene extends Component {
     return items[items.length - 1]?.id ?? null;
   }
 
-  private hasMetMainGoal(): boolean {
+  private hasMetMainGoal(netProfitCoins = this.earnedCoins): boolean {
     if (!this.level) {
       return false;
     }
@@ -1003,7 +1084,28 @@ export class GameScene extends Component {
       return this.servedCustomers >= goals.served;
     }
 
-    return this.earnedCoins >= goals.coin1;
+    return netProfitCoins >= goals.coin1;
+  }
+
+  private calculateLeftoverLoss(): ReturnType<typeof EconomySystem.calculateLeftoverLoss> {
+    if (!this.configs || !this.saveData || !this.level) {
+      return {
+        remainingDishCount: 0,
+        ingredientCost: 0,
+        lossRate: 0,
+        lossCoins: 0,
+      };
+    }
+
+    return EconomySystem.calculateLeftoverLoss(this.configs, this.saveData, this.level, this.cookedInventory);
+  }
+
+  private getLeftoverLossRate(): number {
+    if (!this.configs || !this.saveData || !this.level) {
+      return 0;
+    }
+
+    return EconomySystem.getLeftoverLossRate(this.configs, this.saveData, this.level);
   }
 
   private shouldEndBecauseQueueFinished(): boolean {
@@ -1031,6 +1133,22 @@ export class GameScene extends Component {
   private getEquipmentSlotCount(equipment: EquipmentConfig): number {
     const equipmentLevel = this.saveData?.equipmentLevels[equipment.id] ?? 1;
     return EconomySystem.getEquipmentSlotCountAtLevel(equipment, equipmentLevel);
+  }
+
+  private getMaxWaitingCustomers(): number {
+    if (!this.configs || !this.saveData) {
+      return Math.max(1, this.maxWaitingCustomers);
+    }
+
+    return EconomySystem.getMaxWaitingCustomers(this.configs, this.saveData, this.maxWaitingCustomers);
+  }
+
+  private getPreparedDishLimit(): number {
+    if (!this.configs || !this.saveData) {
+      return 3;
+    }
+
+    return EconomySystem.getPreparedDishLimit(this.configs, this.saveData);
   }
 
   private getTotalDurationSec(): number {

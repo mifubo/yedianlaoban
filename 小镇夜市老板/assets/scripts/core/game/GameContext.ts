@@ -43,6 +43,7 @@ export interface GameResumeState {
   servedCustomers: number;
   angryLeaveCount: number;
   wrongServeCount: number;
+  complaintPenaltyCoins: number;
   combo: number;
   maxCombo: number;
   customerSerial: number;

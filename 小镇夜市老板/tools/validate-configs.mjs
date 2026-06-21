@@ -76,7 +76,7 @@ const levelById = indexById('levels', levels);
 const dishById = indexById('dishes', dishes);
 const customerById = indexById('customers', customers);
 const equipmentById = indexById('equipments', equipments);
-indexById('storeUpgrades', storeUpgrades);
+const storeUpgradeById = indexById('storeUpgrades', storeUpgrades);
 const avatarById = indexById('cosmetics.avatars', avatars);
 const cosmeticById = indexById('cosmetics.items', cosmetics);
 const cosmeticSetById = indexById('cosmetics.sets', cosmeticSets);
@@ -148,8 +148,11 @@ for (const storeUpgrade of storeUpgrades) {
   requireNumber(`StoreUpgrade ${storeUpgrade.id}.maxLevel`, storeUpgrade.maxLevel, 1);
   requireNumber(`StoreUpgrade ${storeUpgrade.id}.baseUpgradeCost`, storeUpgrade.baseUpgradeCost, 1);
   validateEffects(`StoreUpgrade ${storeUpgrade.id}.effectsPerLevel`, storeUpgrade.effectsPerLevel);
+  validateStoreEffectSeparation(storeUpgrade);
   validateMilestones(`StoreUpgrade ${storeUpgrade.id}`, storeUpgrade.upgradeMilestones, storeUpgrade.maxLevel);
 }
+
+validateStoreUpgradeV1(storeUpgradeById);
 
 validateAvatars(avatars, avatarById);
 
@@ -367,6 +370,9 @@ function validateMilestones(label, milestones, maxLevel) {
       errors.push(`${label}.upgradeMilestones level ${milestone.level} needs a name.`);
     }
     validateEffects(`${label}.upgradeMilestones level ${milestone.level}.effects`, milestone.effects ?? {});
+    if (label.startsWith('StoreUpgrade ')) {
+      validateStoreEffectSeparation({ id: label.replace('StoreUpgrade ', ''), effectsPerLevel: milestone.effects ?? {} });
+    }
   }
 }
 
@@ -376,9 +382,108 @@ function validateEffects(label, effects) {
     return;
   }
 
-  for (const key of ['priceBonus', 'speedBonus', 'costReduce', 'patienceBonus', 'complaintReduce', 'rating', 'tipBonus']) {
+  for (const key of [
+    'priceBonus',
+    'speedBonus',
+    'costReduce',
+    'patienceBonus',
+    'complaintReduce',
+    'rating',
+    'tipBonus',
+    'customerAttractBonus',
+    'maxWaitingCustomers',
+    'prepCacheLimit',
+    'pickyAcceptance',
+    'leftoverLossReduce',
+    'visualStage',
+  ]) {
     if (effects[key] !== undefined) {
       requireNumber(`${label}.${key}`, effects[key], 0);
     }
   }
+}
+
+function validateStoreEffectSeparation(storeUpgrade) {
+  const allEffects = [storeUpgrade.effectsPerLevel, ...(storeUpgrade.upgradeMilestones ?? []).map((milestone) => milestone.effects ?? {})];
+  for (const effects of allEffects) {
+    if (effects?.speedBonus !== undefined) {
+      errors.push(`StoreUpgrade ${storeUpgrade.id} must not define speedBonus; equipment owns production speed.`);
+    }
+  }
+}
+
+function validateStoreUpgradeV1(storeMap) {
+  const requiredStoreUpgrades = [
+    {
+      id: 'store_signboard',
+      effects: ['priceBonus', 'rating', 'customerAttractBonus'],
+      label: '灯牌招牌',
+    },
+    {
+      id: 'store_tables',
+      effects: ['patienceBonus', 'maxWaitingCustomers'],
+      label: '桌椅排队区',
+    },
+    {
+      id: 'store_fridge',
+      effects: ['costReduce'],
+      label: '冰柜备货',
+    },
+    {
+      id: 'store_cleanliness',
+      effects: ['complaintReduce', 'pickyAcceptance'],
+      label: '清洁台/垃圾桶',
+    },
+    {
+      id: 'store_prep_table',
+      effects: ['prepCacheLimit'],
+      label: '备菜台',
+    },
+    {
+      id: 'store_facade',
+      effects: ['visualStage', 'rating'],
+      label: '门面装修',
+    },
+  ];
+
+  for (const requirement of requiredStoreUpgrades) {
+    const storeUpgrade = storeMap.get(requirement.id);
+    if (!storeUpgrade) {
+      errors.push(`storeUpgrades must include ${requirement.label}: ${requirement.id}.`);
+      continue;
+    }
+
+    const effectTotals = collectUpgradeEffectKeys(storeUpgrade);
+    for (const effectKey of requirement.effects) {
+      if (!effectTotals.has(effectKey)) {
+        errors.push(`StoreUpgrade ${requirement.id} must define ${effectKey} for ${requirement.label}.`);
+      }
+    }
+  }
+
+  const signboard = storeMap.get('store_signboard');
+  const signboardAttract = sumUpgradeEffect(signboard, 'customerAttractBonus');
+  if (signboardAttract > 0.3) {
+    errors.push(`StoreUpgrade store_signboard customerAttractBonus is too high before runtime caps: ${signboardAttract}.`);
+  }
+}
+
+function collectUpgradeEffectKeys(config) {
+  const keys = new Set();
+  for (const effects of [config.effectsPerLevel, ...(config.upgradeMilestones ?? []).map((milestone) => milestone.effects ?? {})]) {
+    for (const key of Object.keys(effects ?? {})) {
+      keys.add(key);
+    }
+  }
+  return keys;
+}
+
+function sumUpgradeEffect(config, key) {
+  if (!config) {
+    return 0;
+  }
+
+  const perLevelTotal = (config.effectsPerLevel?.[key] ?? 0) * Math.max(0, config.maxLevel - 1);
+  const milestoneTotal = (config.upgradeMilestones ?? []).reduce((sum, milestone) => sum + (milestone.effects?.[key] ?? 0), 0);
+  return perLevelTotal + milestoneTotal;
 }

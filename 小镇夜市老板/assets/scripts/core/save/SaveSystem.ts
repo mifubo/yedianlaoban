@@ -66,6 +66,8 @@ export const DEFAULT_SAVE_DATA: PlayerSaveData = {
     store_tables: 1,
     store_fridge: 1,
     store_cleanliness: 1,
+    store_prep_table: 1,
+    store_facade: 1,
   },
   ownedCosmeticIds: [],
   equippedCosmeticIds: {},

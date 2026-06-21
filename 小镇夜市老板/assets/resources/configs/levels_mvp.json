@@ -710,7 +710,8 @@
       "patienceMultiplier": 0.9,
       "rewardMultiplier": 1.1,
       "waveCount": 3,
-      "rawRuleText": "午后放学潮;3个客流波次"
+      "eventId": "event_school_rush",
+      "rawRuleText": "午后放学潮:学生客流更密集;3个客流波次"
     }
   },
   {
@@ -725,9 +726,10 @@
       "dish_004"
     ],
     "customerMix": {
-      "customer_002": 0.75,
+      "customer_002": 0.65,
       "customer_005": 0.15,
-      "customer_001": 0.1
+      "customer_001": 0.1,
+      "customer_006": 0.1
     },
     "goals": {
       "mainText": "赚够金币",
@@ -753,8 +755,9 @@
       "dish_004"
     ],
     "customerMix": {
-      "customer_002": 0.75,
-      "customer_005": 0.25
+      "customer_002": 0.65,
+      "customer_005": 0.2,
+      "customer_006": 0.15
     },
     "goals": {
       "mainText": "连续满意8人",
@@ -783,9 +786,10 @@
       "dish_003"
     ],
     "customerMix": {
-      "customer_002": 0.7,
-      "customer_005": 0.2,
-      "customer_001": 0.1
+      "customer_002": 0.62,
+      "customer_005": 0.18,
+      "customer_001": 0.08,
+      "customer_007": 0.12
     },
     "goals": {
       "mainText": "赚够金币",
@@ -796,7 +800,9 @@
     "modifiers": {
       "customerCount": 25,
       "patienceMultiplier": 1,
-      "rewardMultiplier": 1
+      "rewardMultiplier": 1,
+      "eventId": "event_hygiene_check",
+      "rawRuleText": "卫生抽查:挑剔顾客会看清洁和门面"
     }
   },
   {

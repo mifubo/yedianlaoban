@@ -98,5 +98,23 @@
       "combo_bonus",
       "loyal"
     ]
+  },
+  {
+    "id": "customer_007",
+    "name": "挑剔顾客",
+    "unlockChapter": 2,
+    "basePatience": 27,
+    "tipMultiplier": 1.28,
+    "preferredDishes": [
+      "dish_004",
+      "dish_005",
+      "dish_006"
+    ],
+    "maxOrderItems": 1,
+    "traits": [
+      "picky",
+      "hygiene_sensitive",
+      "facade_sensitive"
+    ]
   }
 ]
